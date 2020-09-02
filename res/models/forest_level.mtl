@@ -1,0 +1,88 @@
+# Blender MTL File: 'forest_level.blend'
+# Material Count: 7
+
+newmtl Brick
+Ns 14.578512
+Ka 1.000000 1.000000 1.000000
+Kd 0.241309 0.050059 0.022937
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\dev\\Textures\\pbr\\game_usable\\bricks_1\\normal.png
+map_Ns C:\\dev\\Textures\\pbr\\game_usable\\bricks_1\\rough.png
+
+newmtl Floor
+Ns 125.033059
+Ka 1.000000 1.000000 1.000000
+Kd 0.180175 0.185441 0.105827
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\dev\\Textures\\pbr\\game_usable\\wood_1\\normal.png
+map_Kd C:\\dev\\Textures\\pbr\\game_usable\\wood_1\\color.png
+map_Ns C:\\dev\\Textures\\pbr\\game_usable\\wood_1\\rough.png
+
+newmtl Foundation
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.666417 0.800000 0.668451
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\dev\\Textures\\pbr\\game_usable\\concrete_1\\normal.png
+map_Kd C:\\dev\\Textures\\pbr\\game_usable\\concrete_1\\color.png
+map_Ns C:\\dev\\Textures\\pbr\\game_usable\\concrete_1\\rough.png
+
+newmtl Grass
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.004709 0.051776 0.003338
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Planks
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\dev\\Textures\\pbr\\game_usable\\planks_1\\normal.png
+map_Ns C:\\dev\\Textures\\pbr\\game_usable\\planks_1\\rough.png
+refl C:\\dev\\Textures\\pbr\\game_usable\\planks_1\\metal.png
+
+newmtl Plaster
+Ns 19.041317
+Ka 1.000000 1.000000 1.000000
+Kd 0.508868 0.508868 0.508868
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\dev\\Textures\\pbr\\game_usable\\paint_plaster_1\\normal.png
+map_Ns C:\\dev\\Textures\\pbr\\game_usable\\paint_plaster_1\\rough.png
+
+newmtl Wood
+Ns 113.132244
+Ka 1.000000 1.000000 1.000000
+Kd 0.022777 0.020315 0.033000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\dev\\Textures\\pbr\\game_usable\\paint_wood_1\\normal.png
+map_Kd C:\\dev\\Textures\\pbr\\game_usable\\paint_wood_1\\color.png
+map_Ns C:\\dev\\Textures\\pbr\\game_usable\\paint_wood_1\\rough.png
