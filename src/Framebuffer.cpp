@@ -28,15 +28,15 @@ namespace dgn
         return *this;
     }
 
-    Framebuffer& Framebuffer::setColorAttachment(dgn::Texture texture, unsigned slot)
+    Framebuffer& Framebuffer::setColorAttachment(dgn::Texture texture, unsigned slot, unsigned mip)
     {
-        glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, texture.getNativeTexture(), 0));
+        glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, texture.getNativeTexture(), mip));
         return *this;
     }
 
-    Framebuffer& Framebuffer::setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot)
+    Framebuffer& Framebuffer::setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot, unsigned mip)
     {
-        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,  cubemap.getNativeTexture(), 0));
+        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, cubemap.getNativeTexture(), mip));
         return *this;
     }
 
@@ -51,6 +51,11 @@ namespace dgn
         glCall(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height));
         glCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_rbuffer));
         return *this;
+    }
+
+    Framebuffer& Framebuffer::removeDepthBit()
+    {
+        glCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0));
     }
 
     Framebuffer& Framebuffer::complete()

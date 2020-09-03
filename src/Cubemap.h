@@ -44,6 +44,8 @@ namespace dgn
                                TextureStorage internal_storage);
 
         unsigned getNativeTexture();
+        unsigned getWidth(unsigned f = 0);
+        unsigned getHeight(unsigned f = 0);
 
         static void setWrap(TextureWrap wrap);
         static void setFilter(TextureFilter filter);

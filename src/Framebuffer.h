@@ -16,11 +16,12 @@ namespace dgn
 
         Framebuffer& create();
 
-        Framebuffer& setColorAttachment(dgn::Texture texture, unsigned slot);
-        Framebuffer& setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot);
+        Framebuffer& setColorAttachment(dgn::Texture texture, unsigned slot, unsigned mip = 0);
+        Framebuffer& setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot, unsigned mip = 0);
 
         Framebuffer& setDepthAttachment(dgn::Texture texture);
         Framebuffer& createDepthBit(unsigned width, unsigned height);
+        Framebuffer& removeDepthBit();
 
         Framebuffer& complete();
     };

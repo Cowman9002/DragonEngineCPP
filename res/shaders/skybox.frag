@@ -18,7 +18,7 @@ void main()
 	vec3 D = normalize(vTex);
 	vec3 S = normalize(-uSunDir);
 
-	vec3 linearColor = textureCube(uTexture, D).rgb;
+	vec3 linearColor = textureLod(uTexture, D, 0).rgb;
 	
 	float DdotS = max(0.0, dot(D, S));
 	

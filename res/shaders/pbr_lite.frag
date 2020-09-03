@@ -63,9 +63,9 @@ void main()
 	float LoH = max(0.0, dot(L, H));
 	
 	vec3 main_color = texture2D(uTexture, vCoords).rgb;
+	//main_color = vec3(.89, 0.80, 0.1);
 	
-	vec3 reflection = textureCube(uSkybox, R, roughness * 9.0).rgb;
-	//vec3 reflection = CubemapPreconvolution(512, uSkybox, alpha, R);
+	vec3 reflection = textureLod(uSkybox, R, roughness * 5).rgb;
 	
 	vec2 irrad_sampling = N.xz;
 	float y_off = sign(N.y);
@@ -79,11 +79,11 @@ void main()
 	F0 = mix(F0, main_color, metalness);
 	float D = GGX_NDF(NoH, alpha);
 	float G = Smith_G(GGX_S(NoL, alpha), GGX_S(NoV, alpha));
-	vec3 F = Schlick_F(F0, VoH);
+	vec3 F = SchlickRough_F(F0, VoH, alpha);
 	
 	float omm = 1.0 - metalness;
 	vec3 F2 = SchlickRough_F(F0, NoV, alpha);
-	vec3 kD = 1.0 - (1.0 - F2);
+	vec3 kD = 1.0 - F2;
 	kD *= omm;
 	
 	vec3 specular = CookTorrance_BRDF(D, G, F, NoL, NoV);
@@ -94,10 +94,9 @@ void main()
 	ambient *= ao;
 	
 	vec3 lighting = vec3(0.0);
-	kD = (1.0 - F) * (1.0 - metalness);
 	if(NoL > 0.0)
 	{
-		lighting = omm * diffuse + specular;
+		lighting = kD * diffuse + specular;
 		lighting *= Radiance * NoL;
 	}
 	

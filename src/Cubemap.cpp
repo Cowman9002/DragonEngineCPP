@@ -120,6 +120,18 @@ namespace dgn
         return m_texture;
     }
 
+    unsigned Cubemap::getWidth(unsigned f)
+    {
+        if(f > 5) return 0;
+        return m_widths[f];
+    }
+
+    unsigned Cubemap::getHeight(unsigned f)
+    {
+        if(f > 5) return 0;
+        return m_heights[f];
+    }
+
     void Cubemap::setWrap(TextureWrap wrap)
     {
         glCall(glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, int(wrap)));
