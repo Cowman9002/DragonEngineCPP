@@ -2,6 +2,8 @@
 #include "d_internal.h"
 
 #include "BoundingBox.h"
+#include "Plane.h"
+#include "Triangle.h"
 
 #include <algorithm>
 #include <limits>
@@ -54,6 +56,22 @@ namespace dgn
                 BoundingBox* b = (BoundingBox*)other;
                 res = b->checkCollision(this);
             break;
+            }
+        case ColliderType::Plane:
+            {
+                Plane* b = (Plane*)other;
+                float dist = m3d::vec3::distance(b->nearestPoint(position), position);
+                res.hit = dist <= radius;
+
+                break;
+            }
+        case ColliderType::Triangle:
+            {
+                Triangle* b = (Triangle*)other;
+                float dist = m3d::vec3::distance(b->nearestPoint(position), position);
+                res.hit = dist <= radius;
+
+                break;
             }
         default:
             logError("COLLISION", ("Unsupported combination of colliders: " +

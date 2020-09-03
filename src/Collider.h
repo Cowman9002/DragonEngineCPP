@@ -12,7 +12,6 @@ namespace dgn
         Box,
         Sphere,
         Plane,
-        Line,
         Triangle,
         Frustum
     };
@@ -33,6 +32,12 @@ namespace dgn
         virtual CollisionData checkCollision(const Collider* other) = 0;
 
         virtual CollisionData checkCollision(const m3d::vec3& point) = 0;
+        //virtual CollisionData checkCollision(const m3d::vec3& point1, const m3d::vec3& p2) = 0;
+        //virtual CollisionData checkCollision(const m3d::vec3& start, const m3d::vec3& dir) = 0;
         virtual m3d::vec3 nearestPoint(const m3d::vec3& point) = 0;
+
+
+        static CollisionData checkCollision(m3d::vec3 line_1, m3d::vec3 line_2, m3d::vec3 point);
+        static m3d::vec3 nearestPoint(m3d::vec3 line_1, m3d::vec3 line_2, m3d::vec3 point);
     };
 }

@@ -5,6 +5,8 @@
 #include "src/ShadowMap.h"
 #include "src/BoundingBox.h"
 #include "src/BoundingSphere.h"
+#include "src/Plane.h"
+#include "src/Triangle.h"
 
 #include <stdio.h>
 #include <algorithm>
@@ -33,7 +35,9 @@ void updateCamera(dgn::Camera *camera, dgn::Window *window, float delta, bool co
 
 void drawLineBox(const dgn::BoundingBox& box, int uniforms[], const dgn::Renderer& renderer);
 void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn::Renderer& renderer);
+void drawPlane(const dgn::Plane& plane, int uniforms[], const dgn::Renderer& renderer);
 void drawPoint(const m3d::vec3& point, int uniforms[], const dgn::Renderer& renderer);
+void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer& renderer);
 
 int main(int argc, const char* argv[])
 {
@@ -468,7 +472,7 @@ int main(int argc, const char* argv[])
     {
         main_window.getInput().pollEvents();
 
-        updateCamera(&camera, &main_window, 1.0f / 60.0f, true);
+        updateCamera(&camera, &main_window, 1.0f / 60.0f, false);
 
         if(main_window.getInput().getKeyDown(dgn::Key::R))
         {
@@ -654,12 +658,17 @@ int main(int argc, const char* argv[])
         m3d::vec3 test_collider_pos = camera.position + m3d::vec3(0.0f, 0.0f, -1.0f) * camera.rotation;
         //dgn::BoundingSphere test_collider = dgn::BoundingSphere(test_collider_pos, 0.2f);
         dgn::BoundingBox test_collider = dgn::BoundingBox(test_collider_pos + m3d::vec3(0.2), test_collider_pos - m3d::vec3(0.2));
+        //dgn::Plane test_collider = dgn::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), test_collider_pos.y);
         dgn::BoundingBox box1 = dgn::BoundingBox(m3d::vec3(0.5f, 2.5f, 5.5f), m3d::vec3(-0.5f, 1.5f, 4.5f)).normalize();
         dgn::BoundingSphere sphere1 = dgn::BoundingSphere(m3d::vec3(1.0f, 3.0f, 0.0f), 0.5f);
+        dgn::Plane plane1 = dgn::Plane(m3d::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+        dgn::Triangle tri1 = dgn::Triangle(m3d::vec3(2.0f, 1.0f, 5.0f), m3d::vec3(3.0f, 2.0f, 5.0f), m3d::vec3(2.5f, 2.0f, 4.0f));
 
-        colliders.push_back(&test_collider);
         colliders.push_back(&box1);
         colliders.push_back(&sphere1);
+        colliders.push_back(&plane1);
+        colliders.push_back(&tri1);
+        colliders.push_back(&test_collider);
 
         for(unsigned i = 0; i < colliders.size(); i++)
         {
@@ -681,6 +690,12 @@ int main(int argc, const char* argv[])
             case dgn::ColliderType::Sphere:
                     drawLineSphere(*(dgn::BoundingSphere*)colliders[i], line_u_points, main_window.getRenderer());
                 break;
+            case dgn::ColliderType::Plane:
+                    drawPlane(*(dgn::Plane*)colliders[i], line_u_points, main_window.getRenderer());
+                break;
+            case dgn::ColliderType::Triangle:
+                    drawTriangle(*(dgn::Triangle*)colliders[i], line_u_points, main_window.getRenderer());
+                break;
             default:
                 break;
             }
@@ -691,6 +706,12 @@ int main(int argc, const char* argv[])
         drawPoint(near_point, line_u_points, main_window.getRenderer());
 
         near_point = box1.nearestPoint(camera.position);
+        drawPoint(near_point, line_u_points, main_window.getRenderer());
+
+        near_point = plane1.nearestPoint(camera.position);
+        drawPoint(near_point, line_u_points, main_window.getRenderer());
+
+        near_point = tri1.nearestPoint(camera.position);
         drawPoint(near_point, line_u_points, main_window.getRenderer());
 
         main_window.getRenderer().unbindShader();
@@ -904,6 +925,49 @@ void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn
     }
 }
 
+const float planeHWidth = 1.5;
+const float planeHeight = 1.0;
+
+void drawPlane(const dgn::Plane& plane, int uniforms[], const dgn::Renderer& renderer)
+{
+    m3d::vec3 center = plane.normal * plane.distance;
+
+    m3d::vec3 tan;
+    m3d::vec3 bitan;
+
+    if(std::abs(m3d::vec3::dot(plane.normal, m3d::vec3(0.0f, 1.0f, 0.0f)) == 1))
+    {
+        tan = m3d::vec3(1.0f, 0.0f, 0.0f);
+        bitan = m3d::vec3(0.0f, 0.0f, 1.0f);
+    }
+    else
+    {
+        tan = m3d::vec3::cross(plane.normal, m3d::vec3(0.0f, 1.0f, 0.0f)).normalized();
+        bitan = m3d::vec3::cross(plane.normal, tan).normalized();
+    }
+
+    dgn::Shader::uniform(uniforms[0], center);
+    dgn::Shader::uniform(uniforms[1], center + plane.normal * planeHeight);
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], center + (tan + bitan) * planeHWidth);
+    dgn::Shader::uniform(uniforms[1], center + (tan - bitan) * planeHWidth);
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], center + (tan + bitan) * planeHWidth);
+    dgn::Shader::uniform(uniforms[1], center + (-tan + bitan) * planeHWidth);
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], center + (-tan - bitan) * planeHWidth);
+    dgn::Shader::uniform(uniforms[1], center + (tan - bitan) * planeHWidth);
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], center + (-tan - bitan) * planeHWidth);
+    dgn::Shader::uniform(uniforms[1], center + (-tan + bitan) * planeHWidth);
+    renderer.drawBoundMesh();
+
+}
+
 const int point_num_points = 20;
 const float point_line_length = 0.1f;
 const float gr =(std::sqrt(5.0f) + 1.0f) / 2.0f;  // golden ratio = 1.6180339887498948482
@@ -926,6 +990,20 @@ void drawPoint(const m3d::vec3& point, int uniforms[], const dgn::Renderer& rend
     }
 }
 
+void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer& renderer)
+{
+    dgn::Shader::uniform(uniforms[0], tri.p1);
+    dgn::Shader::uniform(uniforms[1], tri.p2);
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], tri.p2);
+    dgn::Shader::uniform(uniforms[1], tri.p3);
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], tri.p3);
+    dgn::Shader::uniform(uniforms[1], tri.p1);
+    renderer.drawBoundMesh();
+}
+
 //TODO: Shader headers and econst values
 //TODO: 3d textures
-//TODO: prerendered cubemap convolution for rough reflections

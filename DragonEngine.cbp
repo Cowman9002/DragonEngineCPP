@@ -61,6 +61,8 @@
 		<Unit filename="src/Input.h" />
 		<Unit filename="src/Mesh.cpp" />
 		<Unit filename="src/Mesh.h" />
+		<Unit filename="src/Plane.cpp" />
+		<Unit filename="src/Plane.h" />
 		<Unit filename="src/Renderer.cpp" />
 		<Unit filename="src/Renderer.h" />
 		<Unit filename="src/Shader.cpp" />
@@ -69,6 +71,8 @@
 		<Unit filename="src/ShadowMap.h" />
 		<Unit filename="src/Texture.cpp" />
 		<Unit filename="src/Texture.h" />
+		<Unit filename="src/Triangle.cpp" />
+		<Unit filename="src/Triangle.h" />
 		<Unit filename="src/Window.cpp" />
 		<Unit filename="src/Window.h" />
 		<Unit filename="src/d_debug.cpp" />
