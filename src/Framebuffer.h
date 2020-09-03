@@ -3,20 +3,22 @@
 namespace dgn
 {
     class Texture;
+    class Cubemap;
     class Framebuffer
     {
         friend class Renderer;
     private:
         unsigned m_buffer;
         unsigned m_rbuffer;
-        unsigned char num_color_attachments;
     public:
         Framebuffer();
         void dispose();
 
         Framebuffer& create();
 
-        Framebuffer& addColorAttachment(dgn::Texture texture);
+        Framebuffer& setColorAttachment(dgn::Texture texture, unsigned slot);
+        Framebuffer& setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot);
+
         Framebuffer& setDepthAttachment(dgn::Texture texture);
         Framebuffer& createDepthBit(unsigned width, unsigned height);
 

@@ -92,7 +92,7 @@ namespace dgn
         glCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
 
-    void Renderer::drawBoundMesh()
+    void Renderer::drawBoundMesh() const
     {
         glCall(glDrawElements(int(draw_mode), bound_mesh_size, GL_UNSIGNED_INT, nullptr));
     }

@@ -3,6 +3,8 @@
 #include "src/Window.h"
 #include "src/Camera.h"
 #include "src/ShadowMap.h"
+#include "src/BoundingBox.h"
+#include "src/BoundingSphere.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -21,9 +23,16 @@
 #define SHADOW_CASCADES 3
 #define SHADOW_NEAR 0.1
 #define SHADOW_FAR 35
-#define CASCADE_SPLIT_BLEND 0.5
+#define CASCADE_SPLIT_BLEND 0.4
+
+#include "src/d_internal.h"
+#include <glad/glad.h>
 
 void updateCamera(dgn::Camera *camera, dgn::Window *window, float delta, bool controller);
+
+void drawLineBox(const dgn::BoundingBox& box, int uniforms[], const dgn::Renderer& renderer);
+void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn::Renderer& renderer);
+void drawPoint(const m3d::vec3& point, int uniforms[], const dgn::Renderer& renderer);
 
 int main(int argc, const char* argv[])
 {
@@ -72,7 +81,7 @@ int main(int argc, const char* argv[])
 
     dgn::Framebuffer screen_fb;
     screen_fb.create();
-    screen_fb.addColorAttachment(screen_texture);
+    screen_fb.setColorAttachment(screen_texture, 0);
     screen_fb.createDepthBit(WINDOW_WIDTH, WINDOW_HEIGHT);
     screen_fb.complete();
 
@@ -141,6 +150,10 @@ int main(int argc, const char* argv[])
     dgn::Texture black_texture;
     black_texture.loadFromFile("res/textures/black.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
+    dgn::Texture irrad_texture[2];
+    irrad_texture[0].loadFromFile("res/textures/irrad_1.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    irrad_texture[1].loadFromFile("res/textures/irrad_2.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+
     bricks_texture[0].loadFromFile("res/textures/bricks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
     concrete_texture[0].loadFromFile("res/textures/concrete_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
     grass_texture[0].loadFromFile("res/textures/ground_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
@@ -164,7 +177,7 @@ int main(int argc, const char* argv[])
     grass_texture[2]        = black_texture;
     plaster_texture[2]      = black_texture;
     paint_wood_texture[2]   = black_texture;
-    planks_texture[2]       = black_texture;
+    planks_texture[2].loadFromFile("res/textures/planks_1/metal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     wood_texture[2]         = black_texture;
     metal_plates_texture[2] = white_texture;
 
@@ -196,6 +209,7 @@ int main(int argc, const char* argv[])
     //int shader_u_norm_mat   = shader.getUniformLocation("uNormMat");
     int shader_u_model_mat   = shader.getUniformLocation("uModelMat");
     int shader_u_skybox   = shader.getUniformLocation("uSkybox");
+    int shader_u_irrad[2]   = {shader.getUniformLocation("uIrrad[0]"), shader.getUniformLocation("uIrrad[1]")};
     int shader_u_texture   = shader.getUniformLocation("uTexture");
     int shader_u_rough   = shader.getUniformLocation("uRough");
     int shader_u_metal   = shader.getUniformLocation("uMetalness");
@@ -218,11 +232,6 @@ int main(int argc, const char* argv[])
     int skin_u_norm_mat   = skin_shader.getUniformLocation("uNormMat");
     int skin_u_lut        = skin_shader.getUniformLocation("uLUT");
 
-    dgn::Camera camera;
-    camera.width = WINDOW_WIDTH;
-    camera.height = WINDOW_HEIGHT;
-
-    camera.position.y = 4.0f;
 
     std::vector<dgn::Texture*> textures = std::vector<dgn::Texture*>(scene.size());
 
@@ -240,9 +249,157 @@ int main(int argc, const char* argv[])
 
     m3d::vec3 sun_dir = m3d::vec3(1.0, -1.0, -1.0).normalized();
 
+    // Rendering to a cubemap ----- reflection probe stuffs
+
+    ////////////////////////////////////////////////
+    //              Reflection Probe              //
+    ////////////////////////////////////////////////
+
+    dgn::Camera camera;
+
+    #define R_PROBE_SIZE 256
+    dgn::Cubemap reflection_probe;
+    reflection_probe.createFromData(nullptr, dgn::TextureData::Ubyte, R_PROBE_SIZE, R_PROBE_SIZE, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
+
+    camera.width = R_PROBE_SIZE;
+    camera.height = R_PROBE_SIZE;
+
+    dgn::Framebuffer reflection_buffer;
+    reflection_buffer.create();
+    reflection_buffer.createDepthBit(R_PROBE_SIZE, R_PROBE_SIZE);
+
+    /*
+    East
+    West
+    Up
+    Down
+    North
+    South
+    */
+    m3d::quat cam_rotations[] =
+    {
+        m3d::quat(180.0f * TO_RADS, m3d::vec3(1.0f, 0.0f, 0.0f)) *
+            m3d::quat( 90.0f * TO_RADS, m3d::vec3(0.0f, -1.0f, 0.0f)),
+        m3d::quat(180.0f * TO_RADS, m3d::vec3(1.0f, 0.0f, 0.0f)) *
+            m3d::quat( 90.0f * TO_RADS, m3d::vec3(0.0f, 1.0f, 0.0f)),
+        m3d::quat( 90.0f * TO_RADS, m3d::vec3(1.0f, 0.0f, 0.0f)),
+        m3d::quat( 90.0f * TO_RADS, m3d::vec3(-1.0f, 0.0f, 0.0f)),
+        m3d::quat(180.0f * TO_RADS, m3d::vec3(0.0f, 0.0f, 1.0f)) *
+            m3d::quat(180.0f * TO_RADS, m3d::vec3(0.0f, 1.0f, 0.0f)),
+        m3d::quat(180.0f * TO_RADS, m3d::vec3(0.0f, 0.0f, 1.0f)) *
+            m3d::quat(  0.0f * TO_RADS, m3d::vec3(0.0f, 1.0f, 0.0f))
+    };
+    main_window.getRenderer().setViewport(0, 0, R_PROBE_SIZE, R_PROBE_SIZE);
+
+    camera.position = m3d::vec3(-1.0f, 3.0f, 0.0f);
+    camera.fov = 90 * TO_RADS;
+
+    for(int i = 0; i < 6; i++)
+    {
+        //camera.rotation = cam_rotations[i];
+        camera.rotation = cam_rotations[i];
+
+        reflection_buffer.setColorAttachment(reflection_probe, i, 0);
+        main_window.getRenderer().clear();
+
+        main_window.getRenderer().setClipMode(dgn::ClipMode::ZeroToOne);
+        main_window.getRenderer().setDepthTest(dgn::DepthTest::Less);
+        main_window.getRenderer().setCullFace(dgn::Face::Back);
+
+        main_window.getRenderer().bindShader(shader);
+
+        dgn::Shader::uniform(shader_u_mvp, camera.getProjection() * camera.getView());
+        //dgn::Shader::uniform(shader_u_norm_mat, m3d::mat3x3(1.0f));
+        dgn::Shader::uniform(shader_u_model_mat, m3d::mat4x4(1.0f));
+        dgn::Shader::uniform(shader_u_cam_pos, camera.position);
+        dgn::Shader::uniform(shader_u_texture, 0);
+        dgn::Shader::uniform(shader_u_rough, 1);
+        dgn::Shader::uniform(shader_u_metal, 2);
+        dgn::Shader::uniform(shader_u_norm, 3);
+        dgn::Shader::uniform(shader_u_ao, 4);
+        dgn::Shader::uniform(shader_u_skybox, 20);
+        dgn::Shader::uniform(shader_u_irrad[0], 18);
+        dgn::Shader::uniform(shader_u_irrad[1], 19);
+
+        main_window.getRenderer().bindCubemap(skybox, 20);
+        main_window.getRenderer().bindTexture(irrad_texture[0], 18);
+        main_window.getRenderer().bindTexture(irrad_texture[1], 19);
+
+        int k = 0;
+        for(const dgn::Mesh& m : scene)
+        {
+            for(int j = 0; j < 5; j++)
+            {
+                main_window.getRenderer().bindTexture(textures[k][j], j);
+
+            }
+            k++;
+            main_window.getRenderer().bindMesh(m);
+            main_window.getRenderer().drawBoundMesh();
+        }
+
+        main_window.getRenderer().setDepthTest(dgn::DepthTest::LEqual);
+
+        main_window.getRenderer().bindMesh(skybox_mesh);
+        main_window.getRenderer().bindShader(skybox_shader);
+        main_window.getRenderer().bindCubemap(skybox, 0);
+
+        dgn::Shader::uniform(skybox_u_vp, camera.getProjection() * camera.getView().toMat3x3().toMat4x4());
+        dgn::Shader::uniform(skybox_u_texture, 0);
+        dgn::Shader::uniform(skybox_u_sun_dir, m3d::vec3());
+
+        main_window.getRenderer().drawBoundMesh();
+
+        m3d::mat4x4 ball_model2 = m3d::mat4x4(1.0f);
+        ball_model2.translate(m3d::vec3(1.0f, 3.0f, 0.0f));
+        main_window.getRenderer().bindShader(skin_shader);
+
+        dgn::Shader::uniform(skin_u_mvp, camera.getProjection() * camera.getView() * ball_model2);
+        //dgn::Shader::uniform(skin_u_model, ball_model2);
+        dgn::Shader::uniform(skin_u_norm_mat, m3d::mat4x4(1.0f).toMat3x3());
+        dgn::Shader::uniform(skin_u_lut, 0);
+
+        main_window.getRenderer().bindTexture(skin_lut, 0);
+
+        main_window.getRenderer().bindMesh(ball);
+        main_window.getRenderer().drawBoundMesh();
+    }
+    reflection_buffer.dispose();
+
+    main_window.getRenderer().bindCubemap(reflection_probe, 0);
+    dgn::Cubemap::generateMipmaps();
+    main_window.getRenderer().unbindCubemap(0);
+
+    camera.position = m3d::vec3(0.0f, 2.0f, 3.0f);
+    camera.rotation = m3d::quat(180 * TO_RADS, m3d::vec3(0.0f, 1.0f, 0.0f));
+    camera.width = WINDOW_WIDTH;
+    camera.height = WINDOW_HEIGHT;
+
+    std::vector<unsigned> line_indices =
+    {
+        0, 1
+    };
+
+    dgn::Mesh line_mesh;
+    line_mesh.createFromData(line_indices);
+    line_mesh.complete();
+
+    dgn::Shader line_shader;
+    line_shader.loadFromFiles("res/shaders/line.vert", "", "res/shaders/line.frag");
+
+    int line_u_mvp = line_shader.getUniformLocation("uMVP");
+    int line_u_points[2] = {line_shader.getUniformLocation("uPoints[0]"), line_shader.getUniformLocation("uPoints[1]")};
+    int line_u_color = line_shader.getUniformLocation("uColor");
+
+    /////////////////////////////////////////////////////////
+    //                      MAIN LOOP                      //
+    /////////////////////////////////////////////////////////
+
     while(!main_window.shouldClose())
     {
         main_window.getInput().pollEvents();
+
+        updateCamera(&camera, &main_window, 1.0f / 60.0f, true);
 
         if(main_window.getInput().getKeyDown(dgn::Key::R))
         {
@@ -258,8 +415,6 @@ int main(int argc, const char* argv[])
             shadowmap[i].updateProjectionMatFitted(camera, cascade_distances[i], cascade_distances[i+1], 10.0f, 1.0f / PI);
             shadowmap[i].updateViewMat(sun_dir);
         }
-
-        updateCamera(&camera, &main_window, 1.0f / 60.0f, true);
 
         m3d::mat4x4 mvp = camera.getProjection() * camera.getView();
 
@@ -328,6 +483,8 @@ int main(int argc, const char* argv[])
         dgn::Shader::uniform(shader_u_norm, 3);
         dgn::Shader::uniform(shader_u_ao, 4);
         dgn::Shader::uniform(shader_u_skybox, 20);
+        dgn::Shader::uniform(shader_u_irrad[0], 18);
+        dgn::Shader::uniform(shader_u_irrad[1], 19);
 
         for(int i = 0; i < SHADOW_CASCADES; i++)
         {
@@ -341,6 +498,8 @@ int main(int argc, const char* argv[])
         }
 
         main_window.getRenderer().bindCubemap(skybox, 20);
+        main_window.getRenderer().bindTexture(irrad_texture[0], 18);
+        main_window.getRenderer().bindTexture(irrad_texture[1], 19);
 
         int i = 0;
         for(const dgn::Mesh& m : scene)
@@ -366,6 +525,8 @@ int main(int argc, const char* argv[])
         //main_window.getRenderer().bindTexture(white_texture, 1);
         //main_window.getRenderer().bindTexture(white_texture, 0);
 
+
+        main_window.getRenderer().bindCubemap(reflection_probe, 20);
         main_window.getRenderer().bindMesh(ball);
         main_window.getRenderer().drawBoundMesh();
 
@@ -388,18 +549,83 @@ int main(int argc, const char* argv[])
 
         main_window.getRenderer().bindMesh(skybox_mesh);
         main_window.getRenderer().bindShader(skybox_shader);
+        main_window.getRenderer().bindCubemap(skybox, 0);
+        //main_window.getRenderer().bindCubemap(reflection_probe, 0);
 
         dgn::Shader::uniform(skybox_u_vp, camera.getProjection() * camera.getView().toMat3x3().toMat4x4());
-        dgn::Shader::uniform(skybox_u_texture, 20);
+        dgn::Shader::uniform(skybox_u_texture, 0);
         dgn::Shader::uniform(skybox_u_sun_dir, sun_dir);
 
         main_window.getRenderer().drawBoundMesh();
+
+        /////////////////////////////////////////////
+        //            RENDER COLLIDERS             //
+        /////////////////////////////////////////////
+
+        //main_window.getRenderer().setDepthTest(dgn::DepthTest::Always);
+
+        main_window.getRenderer().setDrawMode(dgn::DrawMode::Lines);
+        //main_window.getRenderer().setDrawMode(dgn::DrawMode::Triangles);
+
+        main_window.getRenderer().bindMesh(line_mesh);
+        main_window.getRenderer().bindShader(line_shader);
+        dgn::Shader::uniform(line_u_mvp, camera.getProjection() * camera.getView());
+
+        std::vector<dgn::Collider*> colliders;
+
+        m3d::vec3 test_collider_pos = camera.position + m3d::vec3(0.0f, 0.0f, -1.0f) * camera.rotation;
+        //dgn::BoundingSphere test_collider = dgn::BoundingSphere(test_collider_pos, 0.2f);
+        dgn::BoundingBox test_collider = dgn::BoundingBox(test_collider_pos + m3d::vec3(0.2), test_collider_pos - m3d::vec3(0.2));
+        dgn::BoundingBox box1 = dgn::BoundingBox(m3d::vec3(0.5f, 2.5f, 5.5f), m3d::vec3(-0.5f, 1.5f, 4.5f)).normalize();
+        dgn::BoundingSphere sphere1 = dgn::BoundingSphere(m3d::vec3(1.0f, 3.0f, 0.0f), 0.5f);
+
+        colliders.push_back(&test_collider);
+        colliders.push_back(&box1);
+        colliders.push_back(&sphere1);
+
+        for(unsigned i = 0; i < colliders.size(); i++)
+        {
+            dgn::Shader::uniform(line_u_color, m3d::vec3(0.0f, 1.0f, 0.0f));
+
+            for(unsigned j = i + 1; j < colliders.size(); j++)
+            {
+                if(colliders[i]->checkCollision(colliders[j]).hit)
+                {
+                    dgn::Shader::uniform(line_u_color, m3d::vec3(1.0f, 0.0f, 0.0f));
+                }
+            }
+
+            switch(colliders[i]->getType())
+            {
+            case dgn::ColliderType::Box:
+                drawLineBox(*(dgn::BoundingBox*)colliders[i], line_u_points, main_window.getRenderer());
+                break;
+            case dgn::ColliderType::Sphere:
+                    drawLineSphere(*(dgn::BoundingSphere*)colliders[i], line_u_points, main_window.getRenderer());
+                break;
+            default:
+                break;
+            }
+        }
+
+        dgn::Shader::uniform(line_u_color, m3d::vec3(1.0f, 1.0f, 0.0f));
+        m3d::vec3 near_point = sphere1.nearestPoint(camera.position);
+        drawPoint(near_point, line_u_points, main_window.getRenderer());
+
+        near_point = box1.nearestPoint(camera.position);
+        drawPoint(near_point, line_u_points, main_window.getRenderer());
+
+        main_window.getRenderer().unbindShader();
+        main_window.getRenderer().unbindMesh();
+
+        main_window.getRenderer().setDrawMode(dgn::DrawMode::Triangles);
 
         //////////////////////////////////////////////
         //                RENDER SCREEN             //
         //////////////////////////////////////////////
         main_window.getRenderer().unbindFramebuffer();
         main_window.getRenderer().clear();
+        main_window.getRenderer().setDepthTest(dgn::DepthTest::Always);
 
         main_window.getRenderer().bindShader(screen_shader);
 
@@ -411,7 +637,7 @@ int main(int argc, const char* argv[])
         //main_window.getRenderer().setViewport(0, WINDOW_HEIGHT - WINDOW_HEIGHT / 4, WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4);
 
         //main_window.getRenderer().bindTexture(shadowmap.getTexture(), 0);
-        //main_window.getRenderer().drawBoundMesh();
+        //main_window.getRenderer().drawBoundMesh();*/
 
         main_window.swapBuffers();
     }
@@ -503,4 +729,125 @@ void updateCamera(dgn::Camera *camera, dgn::Window *window, float delta, bool co
     }
 }
 
+void drawLineBox(const dgn::BoundingBox& box, int uniforms[], const dgn::Renderer& renderer)
+{
+    m3d::vec3 size = box.max - box.min;
+
+    dgn::Shader::uniform(uniforms[0], box.max);
+    dgn::Shader::uniform(uniforms[1], box.max - m3d::vec3(size.x, 0.0f, 0.0f));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.max);
+    dgn::Shader::uniform(uniforms[1], box.max - m3d::vec3(0.0f, size.y, 0.0f));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.max);
+    dgn::Shader::uniform(uniforms[1], box.max - m3d::vec3(0.0f, 0.0f, size.z));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min);
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, 0.0f, 0.0f));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min);
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, size.y, 0.0f));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min);
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, 0.0f, size.z));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(size.x, 0.0f, 0.0f));
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, size.y, 0.0f));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(size.x, 0.0f, 0.0f));
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, 0.0f, size.z));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, size.y, 0.0f));
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, size.y, size.z));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, size.y, 0.0f));
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, size.y, 0.0f));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, 0.0f, size.z));
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, 0.0f, size.z));
+    renderer.drawBoundMesh();
+
+    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, 0.0f, size.z));
+    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, size.y, size.z));
+    renderer.drawBoundMesh();
+}
+
+const float sphere_subdivisions = 16;
+const float sphere_angle = 2.0f * PI / sphere_subdivisions;
+
+void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn::Renderer& renderer)
+{
+    m3d::vec3 start_long = m3d::vec3(1.0f, 0.0f, 0.0f);
+    m3d::vec3 end_long;
+
+    m3d::vec3 start_lat_x = m3d::vec3(1.0f, 0.0f, 0.0f);
+    m3d::vec3 end_lat_x;
+
+    m3d::vec3 start_lat_z = m3d::vec3(0.0f, 0.0f, 1.0f);
+    m3d::vec3 end_lat_z;
+
+    float angle = 0.0f;
+    for(int i = 0; i < sphere_subdivisions; i++)
+    {
+        angle += sphere_angle;
+        float sin_theta = std::sin(angle);
+        float cos_theta = std::cos(angle);
+
+        end_long = m3d::vec3(cos_theta, 0.0f, sin_theta);
+
+        dgn::Shader::uniform(uniforms[0], start_long * sphere.radius + sphere.position);
+        dgn::Shader::uniform(uniforms[1], end_long * sphere.radius + sphere.position);
+        renderer.drawBoundMesh();
+
+        end_lat_x = m3d::vec3(cos_theta, sin_theta, 0.0f);
+
+        dgn::Shader::uniform(uniforms[0], start_lat_x * sphere.radius + sphere.position);
+        dgn::Shader::uniform(uniforms[1], end_lat_x * sphere.radius + sphere.position);
+        renderer.drawBoundMesh();
+
+        end_lat_z = m3d::vec3(0.0f, sin_theta, cos_theta);
+        dgn::Shader::uniform(uniforms[0], start_lat_z * sphere.radius + sphere.position);
+        dgn::Shader::uniform(uniforms[1], end_lat_z * sphere.radius + sphere.position);
+        renderer.drawBoundMesh();
+
+        start_long = end_long;
+        start_lat_x = end_lat_x;
+        start_lat_z = end_lat_z;
+    }
+}
+
+const int point_num_points = 20;
+const float point_line_length = 0.1f;
+const float gr =(std::sqrt(5.0f) + 1.0f) / 2.0f;  // golden ratio = 1.6180339887498948482
+const float ga =(2.0f - gr) * (2.0f * PI);  // golden angle = 2.39996322972865332
+
+void drawPoint(const m3d::vec3& point, int uniforms[], const dgn::Renderer& renderer)
+{
+    for(int i = 0; i < point_num_points; i++)
+    {
+        float lat = std::asin(-1.0f + 2.0f * float(i) / (point_num_points + 1));
+        float lon = ga * i;
+
+        float x = std::cos(lon)* std::cos(lat);
+        float y = std::sin(lon)* std::cos(lat);
+        float z = std::sin(lat);
+
+        dgn::Shader::uniform(uniforms[0], point);
+        dgn::Shader::uniform(uniforms[1], point + m3d::vec3(x, y, z) * point_line_length);
+        renderer.drawBoundMesh();
+    }
+}
+
 //TODO: Shader headers and econst values
+//TODO: 3d textures
+//TODO: prerendered cubemap convolution for rough reflections

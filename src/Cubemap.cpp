@@ -31,7 +31,14 @@ namespace dgn
             m_widths[i] = width[i];
             m_heights[i] = height[i];
 
-            glCall(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, int(internal_storage), width[i], height[i], 0, int(given_storage), int(data_type), data[i]));
+            if(data != nullptr)
+            {
+                glCall(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, int(internal_storage), width[i], height[i], 0, int(given_storage), int(data_type), data[i]));
+            }
+            else
+            {
+                glCall(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, int(internal_storage), width[i], height[i], 0, int(given_storage), int(data_type), nullptr));
+            }
         }
 
 
@@ -43,6 +50,22 @@ namespace dgn
         glCall(glBindTexture(GL_TEXTURE_CUBE_MAP, 0));
 
         return *this;
+    }
+
+    Cubemap& Cubemap::createFromData(const void *data[6], TextureData data_type, unsigned width, unsigned height,
+            TextureWrap wrap, TextureFilter filter,
+            TextureStorage internal_storage, TextureStorage given_storage)
+    {
+        unsigned w[6];
+        unsigned h[6];
+
+        for(int i = 0; i < 6; i++)
+        {
+            w[i] = width;
+            h[i] = height;
+        }
+
+        return createFromData(data, data_type, w, h, wrap, filter, internal_storage, given_storage);
     }
 
     Cubemap& Cubemap::loadFromFiles(std::string filepath[6], TextureWrap wrap, TextureFilter filter,
@@ -65,15 +88,11 @@ namespace dgn
         }
 
 
-        const void *data[6] =
+        const void *data[6];
+        for(int i = 0; i < 6; i++)
         {
-            pixels[0].data(),
-            pixels[1].data(),
-            pixels[2].data(),
-            pixels[3].data(),
-            pixels[4].data(),
-            pixels[5].data()
-        };
+            data[i] = pixels[i].data();
+        }
 
         return createFromData(data, TextureData::Ubyte, width, height, wrap, filter, internal_storage, TextureStorage::RGBA);
     }
@@ -94,6 +113,11 @@ namespace dgn
         };
 
         return loadFromFiles(filepaths, wrap, filter, internal_storage);
+    }
+
+    unsigned Cubemap::getNativeTexture()
+    {
+        return m_texture;
     }
 
     void Cubemap::setWrap(TextureWrap wrap)
@@ -128,6 +152,11 @@ namespace dgn
             glCall(glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
             break;
         }
+    }
+
+    void Cubemap::generateMipmaps()
+    {
+         glCall(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
     }
 }
 

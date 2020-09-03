@@ -49,13 +49,35 @@ namespace dgn
         return *this;
     }
 
+    Mesh& Mesh::createFromData(const std::vector<unsigned>& index_data)
+    {
+        glCall(glGenVertexArrays(1, &m_vao));
+        glCall(glGenBuffers(1, &m_vbo));
+        glCall(glGenBuffers(1, &m_ibo));
+
+        glCall(glBindVertexArray(m_vao));
+
+        // -------- Index Data
+        glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo));
+        glCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_data.size() * sizeof(unsigned), index_data.data(), GL_STATIC_DRAW));
+        glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+        // -------- Vertex Data
+        glCall(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        glCall(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW));
+
+        m_length = index_data.size();
+
+        return *this;
+    }
+
     Mesh& Mesh::setVertexSize(unsigned size)
     {
         vert_size = size * sizeof(float);
         return *this;
     }
 
-    Mesh& Mesh::addVertexAttrib(unsigned location, unsigned size)
+    Mesh& Mesh::addVertexAttrib(unsigned location, int size)
     {
         glCall(glVertexAttribPointer(location, size, GL_FLOAT, GL_FALSE, vert_size, (void*)vert_offsets));
         glCall(glEnableVertexAttribArray(location));

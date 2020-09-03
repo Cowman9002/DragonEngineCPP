@@ -112,7 +112,7 @@ namespace dgn
         void unbindCubemap(unsigned slot);
         void unbindFramebuffer();
 
-        void drawBoundMesh();
+        void drawBoundMesh() const;
 
         void setDepthTest(DepthTest func);
         void setClearColor(float red, float green, float blue);

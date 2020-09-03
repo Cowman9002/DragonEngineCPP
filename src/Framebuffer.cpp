@@ -2,13 +2,14 @@
 #include "d_internal.h"
 
 #include "Texture.h"
+#include "Cubemap.h"
 
 #include <glad/glad.h>
 #include <vector>
 
 namespace dgn
 {
-    Framebuffer::Framebuffer() : m_buffer(0), m_rbuffer(0), num_color_attachments(0) {}
+    Framebuffer::Framebuffer() : m_buffer(0), m_rbuffer(0) {}
 
     void Framebuffer::dispose()
     {
@@ -27,10 +28,15 @@ namespace dgn
         return *this;
     }
 
-    Framebuffer& Framebuffer::addColorAttachment(dgn::Texture texture)
+    Framebuffer& Framebuffer::setColorAttachment(dgn::Texture texture, unsigned slot)
     {
-        glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + num_color_attachments, texture.getNativeTexture(), 0));
-        num_color_attachments++;
+        glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, texture.getNativeTexture(), 0));
+        return *this;
+    }
+
+    Framebuffer& Framebuffer::setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot)
+    {
+        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,  cubemap.getNativeTexture(), 0));
         return *this;
     }
 
@@ -49,15 +55,6 @@ namespace dgn
 
     Framebuffer& Framebuffer::complete()
     {
-        std::vector<GLenum> draw_buffers;
-
-        for(int i = 0; i < num_color_attachments; i++)
-        {
-            draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
-        }
-
-        glCall(glDrawBuffers(num_color_attachments, draw_buffers.data()));
-
         glCall(unsigned status = glCheckFramebufferStatus(GL_FRAMEBUFFER));
         if(status != GL_FRAMEBUFFER_COMPLETE)
         {

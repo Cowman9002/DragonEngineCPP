@@ -1,0 +1,387 @@
+# depslib dependency file v1.0
+1598712642 source:c:\dev\cpp\dragonengine\src\d_internal.cpp
+	<glad/glad.h>
+	<stdio.h>
+
+1595526816 c:\dev\cpp\dragonengine\include\glad\glad.h
+	<KHR/khrplatform.h>
+
+1595526816 c:\dev\cpp\dragonengine\include\khr\khrplatform.h
+	<stdint.h>
+	<inttypes.h>
+	<stdint.h>
+
+1598718808 source:c:\dev\cpp\dragonengine\src\input.cpp
+	"Input.h"
+	"d_internal.h"
+	<math.h>
+	<glad/glad.h>
+	<GLFW/glfw3.h>
+
+1598718787 c:\dev\cpp\dragonengine\src\input.h
+	<array>
+
+1599000614 c:\dev\cpp\dragonengine\src\d_internal.h
+	<stdio.h>
+
+1595526892 c:\dev\cpp\dragonengine\include\glfw\glfw3.h
+	<stddef.h>
+	<stdint.h>
+	<vulkan/vulkan.h>
+	<GLES/gl.h>
+	<GLES/glext.h>
+	<GLES2/gl2.h>
+	<GLES2/gl2ext.h>
+	<GLES3/gl3.h>
+	<GLES2/gl2ext.h>
+	<GLES3/gl31.h>
+	<GLES2/gl2ext.h>
+	<GLES3/gl32.h>
+	<GLES2/gl2ext.h>
+	<OpenGL/gl3.h>
+	<OpenGL/gl3ext.h>
+	<GL/glcorearb.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glext.h>
+	<GL/glu.h>
+
+1599097181 source:c:\dev\cpp\dragonengine\main.cpp
+	"src/Window.h"
+	"src/Camera.h"
+	"src/ShadowMap.h"
+	"src/BoundingBox.h"
+	"src/BoundingSphere.h"
+	<stdio.h>
+	<math.h>
+	<m3d/math1D.h>
+	<m3d/vec3.h>
+	<m3d/vec4.h>
+	<m3d/mat3x3.h>
+	<m3d/mat4x4.h>
+	"src/d_internal.h"
+	<glad/glad.h>
+
+1598795993 c:\dev\cpp\dragonengine\src\window.h
+	<string>
+	<Input.h>
+	<Renderer.h>
+
+1598796221 source:c:\dev\cpp\dragonengine\src\window.cpp
+	"Window.h"
+	"d_internal.h"
+	<glad/glad.h>
+	<GLFW/glfw3.h>
+
+1598714047 source:c:\dev\cpp\dragonengine\src\glad.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<glad/glad.h>
+	<windows.h>
+	<winapifamily.h>
+	<dlfcn.h>
+
+1598712642 source:c:\dev\cpp\dragonengine\src\d_debug.cpp
+	<glad/glad.h>
+	<stdio.h>
+
+1599093496 source:c:\dev\cpp\dragonengine\src\renderer.cpp
+	"Renderer.h"
+	"d_internal.h"
+	<glad/glad.h>
+	<GLFW/glfw3.h>
+
+1599093481 c:\dev\cpp\dragonengine\src\renderer.h
+	"Mesh.h"
+	"Shader.h"
+	"Texture.h"
+	"Cubemap.h"
+	"Framebuffer.h"
+
+1599093221 c:\dev\cpp\dragonengine\src\mesh.h
+	<vector>
+	<string>
+
+1599093214 source:c:\dev\cpp\dragonengine\src\mesh.cpp
+	"Mesh.h"
+	"d_internal.h"
+	<assimp/Importer.hpp>
+	<assimp/scene.h>
+	<assimp/postprocess.h>
+	<glad/glad.h>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\importer.hpp
+	<assimp/types.h>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\types.h
+	<sys/types.h>
+	<stddef.h>
+	<string.h>
+	<limits.h>
+	"defs.h"
+	"vector3.h"
+	"vector2.h"
+	"color4.h"
+	"matrix3x3.h"
+	"matrix4x4.h"
+	"quaternion.h"
+	<cstring>
+	<new>
+	<string>
+	"vector2.inl"
+	"vector3.inl"
+	"color4.inl"
+	"quaternion.inl"
+	"matrix3x3.inl"
+	"matrix4x4.inl"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\defs.h
+	<assimp/config.h>
+
+1596150008 c:\dev\cpp\dragonengine\include\assimp\config.h
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\vector3.h
+	<cmath>
+	<math.h>
+	"defs.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\vector2.h
+	<cmath>
+	<math.h>
+	"./Compiler/pushpack1.h"
+	"defs.h"
+	"./Compiler/poppack1.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\compiler\pushpack1.h
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\compiler\poppack1.h
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\color4.h
+	"defs.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\matrix3x3.h
+	"defs.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\matrix4x4.h
+	"vector3.h"
+	"defs.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\quaternion.h
+	"defs.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\vector2.inl
+	"vector2.h"
+	<cmath>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\vector3.inl
+	"vector3.h"
+	<cmath>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\color4.inl
+	"color4.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\quaternion.inl
+	"quaternion.h"
+	<cmath>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\matrix3x3.inl
+	"matrix3x3.h"
+	"matrix4x4.h"
+	<algorithm>
+	<cmath>
+	<limits>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\matrix4x4.inl
+	"matrix4x4.h"
+	"matrix3x3.h"
+	"quaternion.h"
+	<algorithm>
+	<limits>
+	<cmath>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\scene.h
+	"types.h"
+	"texture.h"
+	"mesh.h"
+	"light.h"
+	"camera.h"
+	"material.h"
+	"anim.h"
+	"metadata.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\texture.h
+	"types.h"
+	"./Compiler/pushpack1.h"
+	"./Compiler/poppack1.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\mesh.h
+	"types.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\light.h
+	"types.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\camera.h
+	"types.h"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\material.h
+	"types.h"
+	"./Compiler/pushpack1.h"
+	"./Compiler/poppack1.h"
+	"material.inl"
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\material.inl
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\anim.h
+	<assimp/types.h>
+	<assimp/quaternion.h>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\metadata.h
+	"Compiler/pstdint.h"
+	<stdint.h>
+	<string>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\compiler\pstdint.h
+	<stddef.h>
+	<limits.h>
+	<signal.h>
+	<stdint.h>
+	<sys/inttypes.h>
+	<wchar.h>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+
+1596149922 c:\dev\cpp\dragonengine\include\assimp\postprocess.h
+	"types.h"
+
+1599000636 source:c:\dev\cpp\dragonengine\src\shader.cpp
+	"Shader.h"
+	"d_internal.h"
+	<glad/glad.h>
+	<fstream>
+	<iostream>
+	<sstream>
+	<vector>
+	<m3d/vec2.h>
+	<m3d/vec3.h>
+	<m3d/vec4.h>
+	<m3d/mat3x3.h>
+	<m3d/mat4x4.h>
+
+1598736829 c:\dev\cpp\dragonengine\src\shader.h
+	<string>
+
+1598798076 c:\dev\cpp\dragonengine\include\m3d\vec2.h
+
+1598798128 c:\dev\cpp\dragonengine\include\m3d\vec3.h
+
+1598798176 c:\dev\cpp\dragonengine\include\m3d\vec4.h
+
+1598791008 c:\dev\cpp\dragonengine\include\m3d\mat3x3.h
+
+1598791048 c:\dev\cpp\dragonengine\include\m3d\mat4x4.h
+
+1598707146 c:\dev\cpp\dragonengine\include\m3d\math1d.h
+
+1598739918 source:c:\dev\cpp\dragonengine\src\lodepng.cpp
+	"lodepng.h"
+	<limits.h>
+	<stdio.h>
+	<stdlib.h>
+
+1598739898 c:\dev\cpp\dragonengine\src\lodepng.h
+	<string.h>
+	<vector>
+	<string>
+	"lodepng.h"
+	<iostream>
+	"lodepng.h"
+
+1599046333 source:c:\dev\cpp\dragonengine\src\texture.cpp
+	"Texture.h"
+	"d_internal.h"
+	"lodepng.h"
+	<glad/glad.h>
+
+1599046341 c:\dev\cpp\dragonengine\src\texture.h
+	<string>
+	"textureEnums.h"
+
+1598914351 c:\dev\cpp\dragonengine\src\textureenums.h
+
+1599081650 source:c:\dev\cpp\dragonengine\src\cubemap.cpp
+	"Cubemap.h"
+	"d_internal.h"
+	"lodepng.h"
+	<glad/glad.h>
+
+1599081425 c:\dev\cpp\dragonengine\src\cubemap.h
+	<string>
+	"textureEnums.h"
+
+1598897224 source:c:\dev\cpp\dragonengine\src\camera.cpp
+	"Camera.h"
+	<m3d/Math1D.h>
+
+1598798564 c:\dev\cpp\dragonengine\src\camera.h
+	<m3d/vec3.h>
+	<m3d/quat.h>
+	<m3d/mat4x4.h>
+
+1598800668 c:\dev\cpp\dragonengine\include\m3d\quat.h
+
+1599077959 source:c:\dev\cpp\dragonengine\src\framebuffer.cpp
+	"Framebuffer.h"
+	"d_internal.h"
+	"Texture.h"
+	"Cubemap.h"
+	<glad/glad.h>
+	<vector>
+
+1599077915 c:\dev\cpp\dragonengine\src\framebuffer.h
+
+1599097986 source:c:\dev\cpp\dragonengine\src\boundingsphere.cpp
+	"BoundingSphere.h"
+	"d_internal.h"
+	"BoundingBox.h"
+	<algorithm>
+	<limits>
+	<string>
+
+1599097653 c:\dev\cpp\dragonengine\src\boundingsphere.h
+	"Collider.h"
+	<m3d/vec3.h>
+	<vector>
+
+1598899833 source:c:\dev\cpp\dragonengine\src\shadowmap.cpp
+	"ShadowMap.h"
+	<m3d/quat.h>
+	<m3d/vec4.h>
+	<m3d/vec2.h>
+	"Camera.h"
+	"math.h"
+	"BoundingSphere.h"
+
+1598899813 c:\dev\cpp\dragonengine\src\shadowmap.h
+	"Texture.h"
+	"Framebuffer.h"
+	<m3d/mat4x4.h>
+	<m3d/vec3.h>
+
+1599097764 source:c:\dev\cpp\dragonengine\src\boundingbox.cpp
+	"BoundingBox.h"
+	"d_internal.h"
+	"BoundingSphere.h"
+	<algorithm>
+	<limits>
+	<string>
+
+1599097650 c:\dev\cpp\dragonengine\src\boundingbox.h
+	"Collider.h"
+	<vector>
+	<m3d/vec3.h>
+
+1599097655 c:\dev\cpp\dragonengine\src\collider.h
+

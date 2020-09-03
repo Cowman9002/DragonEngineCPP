@@ -32,6 +32,10 @@ namespace dgn
                                 TextureWrap wrap, TextureFilter filter,
                                 TextureStorage internal_storage, TextureStorage given_storage);
 
+        Cubemap& createFromData(const void *data[6], TextureData data_type, unsigned width, unsigned height,
+                                TextureWrap wrap, TextureFilter filter,
+                                TextureStorage internal_storage, TextureStorage given_storage);
+
         Cubemap& loadFromFiles(std::string filepath[6], TextureWrap wrap, TextureFilter filter,
                                TextureStorage internal_storage);
 
@@ -39,7 +43,10 @@ namespace dgn
         Cubemap& loadFromDirectory(std::string filepath, TextureWrap wrap, TextureFilter filter,
                                TextureStorage internal_storage);
 
+        unsigned getNativeTexture();
+
         static void setWrap(TextureWrap wrap);
         static void setFilter(TextureFilter filter);
+        static void generateMipmaps();
     };
 }

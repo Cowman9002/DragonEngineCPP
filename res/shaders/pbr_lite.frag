@@ -14,6 +14,7 @@ varying vec4 vLightPos[CASCADES];
 varying mat3 vTBN;
 
 uniform samplerCube uSkybox;
+uniform sampler2D uIrrad[2];
 uniform sampler2D uShadowMap[CASCADES];
 uniform sampler2D uTexture;
 uniform sampler2D uRough;
@@ -63,8 +64,16 @@ void main()
 	
 	vec3 main_color = texture2D(uTexture, vCoords).rgb;
 	
-	vec3 reflection = textureCube(uSkybox, R, roughness * 7.0).rgb;
-	vec3 irrad = textureCube(uSkybox, N, 9.0).rgb;
+	vec3 reflection = textureCube(uSkybox, R, roughness * 9.0).rgb;
+	//vec3 reflection = CubemapPreconvolution(512, uSkybox, alpha, R);
+	
+	vec2 irrad_sampling = N.xz;
+	float y_off = sign(N.y);
+	float m = 2 * sqrt(N.x * N.x + N.z * N.z + (N.y + y_off) * (N.y + y_off));
+	irrad_sampling /= m;
+	irrad_sampling += 0.5;
+	int irrad_map_index = int(floor(y_off * 0.5 + 0.5));
+	vec3 irrad = texture2D(uIrrad[irrad_map_index], irrad_sampling).rgb;
 	
 	vec3 F0 = vec3(0.04);
 	F0 = mix(F0, main_color, metalness);
@@ -106,4 +115,5 @@ void main()
 	vec3 color = ambient + lighting * shadow;
 	
 	fragColor = color;
+	//fragColor = vec3(irrad_sampling, 0.0);
 }

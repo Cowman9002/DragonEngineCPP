@@ -14,8 +14,9 @@ namespace dgn
         void dispose();
 
         Mesh& createFromData(const std::vector<float>& vertex_data, const std::vector<unsigned>& index_data);
+        Mesh& createFromData(const std::vector<unsigned>& index_data);
         Mesh& setVertexSize(unsigned size);
-        Mesh& addVertexAttrib(unsigned location, unsigned size);
+        Mesh& addVertexAttrib(unsigned location, int size);
         Mesh& complete();
 
         static std::vector<Mesh> loadFromFile(std::string filepath);
