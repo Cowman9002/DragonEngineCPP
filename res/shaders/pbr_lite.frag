@@ -5,7 +5,7 @@
 
 layout(location = 0) out vec3 fragColor;
 
-const int CASCADES = 3;
+econst int CASCADES;
 
 varying vec2 vCoords;
 varying vec3 vNorm;

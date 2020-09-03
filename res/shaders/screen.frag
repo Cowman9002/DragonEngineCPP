@@ -6,7 +6,7 @@ varying vec2 vTexcoord;
 
 uniform sampler2D uScreen;
 
-const float A = 1.0;
+const float A = 0.6;
 const float B = 0.45333;
 
 float tonemapChannel(float channel);

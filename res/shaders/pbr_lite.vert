@@ -4,7 +4,7 @@ layout(location = 1) in vec2 aTex;
 layout(location = 2) in vec3 aNorm;
 layout(location = 3) in vec3 aTang;
 
-const int CASCADES = 3;
+econst int CASCADES;
 
 varying vec2 vCoords;
 varying vec3 vFragPos;

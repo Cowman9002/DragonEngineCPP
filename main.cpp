@@ -1,5 +1,3 @@
-//TODO: Collision
-
 #include "src/Window.h"
 #include "src/Camera.h"
 #include "src/ShadowMap.h"
@@ -116,6 +114,8 @@ int main(int argc, const char* argv[])
 
     int shadow_u_light = shadow_shader.getUniformLocation("uLight");
     int shadow_u_model = shadow_shader.getUniformLocation("uModel");
+
+    dgn::Shader::setEconst("CASCADES", SHADOW_CASCADES);
 
     /////////////////////////////////////////////////////
 
@@ -472,7 +472,7 @@ int main(int argc, const char* argv[])
     {
         main_window.getInput().pollEvents();
 
-        updateCamera(&camera, &main_window, 1.0f / 60.0f, false);
+        updateCamera(&camera, &main_window, 1.0f / 60.0f, true);
 
         if(main_window.getInput().getKeyDown(dgn::Key::R))
         {
@@ -656,13 +656,17 @@ int main(int argc, const char* argv[])
         std::vector<dgn::Collider*> colliders;
 
         m3d::vec3 test_collider_pos = camera.position + m3d::vec3(0.0f, 0.0f, -1.0f) * camera.rotation;
-        //dgn::BoundingSphere test_collider = dgn::BoundingSphere(test_collider_pos, 0.2f);
-        dgn::BoundingBox test_collider = dgn::BoundingBox(test_collider_pos + m3d::vec3(0.2), test_collider_pos - m3d::vec3(0.2));
+        dgn::BoundingSphere test_collider = dgn::BoundingSphere(test_collider_pos, 0.2f);
+        //dgn::BoundingBox test_collider = dgn::BoundingBox(test_collider_pos + m3d::vec3(0.2), test_collider_pos - m3d::vec3(0.2));
         //dgn::Plane test_collider = dgn::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), test_collider_pos.y);
+//        dgn::Triangle test_collider = dgn::Triangle(test_collider_pos + m3d::vec3(-0.5f, -0.5f, 0.0f),
+//                                                    test_collider_pos + m3d::vec3(0.0f, 0.5f, 0.0f),
+//                                                    test_collider_pos + m3d::vec3(0.5f, -0.5f, 0.0f));
+
         dgn::BoundingBox box1 = dgn::BoundingBox(m3d::vec3(0.5f, 2.5f, 5.5f), m3d::vec3(-0.5f, 1.5f, 4.5f)).normalize();
         dgn::BoundingSphere sphere1 = dgn::BoundingSphere(m3d::vec3(1.0f, 3.0f, 0.0f), 0.5f);
-        dgn::Plane plane1 = dgn::Plane(m3d::vec3(1.0f, 1.0f, 1.0f), 1.0f);
-        dgn::Triangle tri1 = dgn::Triangle(m3d::vec3(2.0f, 1.0f, 5.0f), m3d::vec3(3.0f, 2.0f, 5.0f), m3d::vec3(2.5f, 2.0f, 4.0f));
+        dgn::Plane plane1 = dgn::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), 1.0f);
+        dgn::Triangle tri1 = dgn::Triangle(m3d::vec3(0.0f, 1.5f, 2.5f), m3d::vec3(0.0f, 2.5f, 3.0f), m3d::vec3(0.0f, 1.5f, 3.5f));
 
         colliders.push_back(&box1);
         colliders.push_back(&sphere1);
@@ -1005,5 +1009,6 @@ void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer&
     renderer.drawBoundMesh();
 }
 
-//TODO: Shader headers and econst values
 //TODO: 3d textures
+
+//TODO: make first dll and start demo game

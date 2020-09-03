@@ -10,12 +10,37 @@
 #include <string>
 
 #include <m3d/math1D.h>
+#include <m3d/vec2.h>
 
 namespace dgn
 {
+
     Triangle::Triangle() :Triangle(m3d::vec3(), m3d::vec3(), m3d::vec3()) {}
     Triangle::Triangle(m3d::vec3 p1, m3d::vec3 p2, m3d::vec3 p3) :
         Collider(ColliderType::Triangle), p1(p1), p2(p2), p3(p3) {}
+
+    bool TriTriSAT(const Triangle& tri1, const Triangle& tri2, const m3d::vec3& axis)
+    {
+        // get intervals
+
+        float j1 = m3d::vec3::dot(tri1.p1, axis);
+        float j2 = m3d::vec3::dot(tri1.p2, axis);
+        float j3 = m3d::vec3::dot(tri1.p3, axis);
+
+        float k1 = m3d::vec3::dot(tri2.p1, axis);
+        float k2 = m3d::vec3::dot(tri2.p2, axis);
+        float k3 = m3d::vec3::dot(tri2.p3, axis);
+
+        m3d::vec2 tri1_int = m3d::vec2(std::max(j1, std::max(j2, j3)), std::min(j1, std::min(j2, j3)));
+        m3d::vec2 tri2_int = m3d::vec2(std::max(k1, std::max(k2, k3)), std::min(k1, std::min(k2, k3)));
+
+        if (tri1_int.x < tri2_int.y || tri2_int.x < tri1_int.y)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     CollisionData Triangle::checkCollision(const Collider* other)
     {
@@ -23,6 +48,51 @@ namespace dgn
 
         switch(other->getType())
         {
+        case ColliderType::Triangle:
+            {
+                Triangle *b = (Triangle*)other;
+
+
+                m3d::vec3 f0 = p2 - p1; // B - A
+                m3d::vec3 f1 = p3 - p2; // C - B
+                m3d::vec3 f2 = p1 - p3; // A - C
+
+                m3d::vec3 u0 = b->p2 - b->p1; // B - A
+                m3d::vec3 u1 = b->p3 - b->p2; // C - B
+                m3d::vec3 u2 = b->p1 - b->p3; // A - C
+
+
+                m3d::vec3 axis[] =
+                {
+                    m3d::vec3::cross(f0, f1).normalized(),
+                    m3d::vec3::cross(u0, u1).normalized(),
+
+                    m3d::vec3::cross(u0, f0).normalized(),
+                    m3d::vec3::cross(u0, f1).normalized(),
+                    m3d::vec3::cross(u0, f2).normalized(),
+
+                    m3d::vec3::cross(u1, f0).normalized(),
+                    m3d::vec3::cross(u1, f1).normalized(),
+                    m3d::vec3::cross(u1, f2).normalized(),
+
+                    m3d::vec3::cross(u2, f0).normalized(),
+                    m3d::vec3::cross(u2, f1).normalized(),
+                    m3d::vec3::cross(u2, f2).normalized()
+                };
+
+                res.hit = true;
+
+                for(int i = 0; i < 11; i++)
+                {
+                    if(!TriTriSAT(*this, *b, axis[i]))
+                    {
+                        res.hit = false;
+                        break;
+                    }
+                }
+
+                break;
+            }
         case ColliderType::Sphere:
             {
                 BoundingSphere* b = (BoundingSphere*)other;
@@ -32,6 +102,12 @@ namespace dgn
         case ColliderType::Box:
             {
                 BoundingBox* b = (BoundingBox*)other;
+                res = b->checkCollision(this);
+                break;
+            }
+        case ColliderType::Plane:
+            {
+                Plane* b = (Plane*)other;
                 res = b->checkCollision(this);
                 break;
             }
@@ -46,7 +122,6 @@ namespace dgn
         return res;
     }
 
-    // TODO: finish this
     CollisionData Triangle::checkCollision(const m3d::vec3& point)
     {
         CollisionData res;

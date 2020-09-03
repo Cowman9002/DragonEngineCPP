@@ -40,6 +40,37 @@ namespace dgn
         return *this;
     }
 
+    bool boxTriangleSAT(const dgn::Triangle& tri, const m3d::vec3 e,
+            const m3d::vec3& u0, const m3d::vec3& u1, const m3d::vec3& u2, const m3d::vec3 axis)
+    {
+        // Project all 3 vertices of the triangle onto the Seperating axis
+        float p0 = m3d::vec3::dot(tri.p1, axis);
+        float p1 = m3d::vec3::dot(tri.p2, axis);
+        float p2 = m3d::vec3::dot(tri.p3, axis);
+        // Project the AABB onto the seperating axis
+        // We don't care about the end points of the prjection
+        // just the length of the half-size of the AABB
+        // That is, we're only casting the extents onto the
+        // seperating axis, not the AABB center. We don't
+        // need to cast the center, because we know that the
+        // aabb is at origin compared to the triangle!
+        float r = e.x * std::abs(m3d::vec3::dot(u0, axis)) +
+                    e.y * std::abs(m3d::vec3::dot(u1, axis)) +
+                    e.z * std::abs(m3d::vec3::dot(u2, axis));
+        // Now do the actual test, basically see if either of
+        // the most extreme of the triangle points intersects r
+        // You might need to write Min & Max functions that take 3 arguments
+        if (std::max(-std::max(p0, std::max(p1, p2)), std::min(p0, std::min(p1, p2))) > r)
+        {
+            // This means BOTH of the points of the projected triangle
+            // are outside the projected half-length of the AABB
+            // Therefore the axis is seperating and we can exit
+            return false;
+        }
+
+        return true;
+    }
+
     CollisionData BoundingBox::checkCollision(const Collider* other)
     {
         CollisionData res;
@@ -93,9 +124,7 @@ namespace dgn
             {
                 Triangle* b = (Triangle*)other;
 
-                m3d::vec3 v0 = b->p1;
-                m3d::vec3 v1 = b->p2;
-                m3d::vec3 v2 = b->p3;
+                dgn::Triangle tri = *b;
 
                 // Convert AABB to center-extents form
                 m3d::vec3 c = (max + min) * 0.5f; // Compute AABB center
@@ -103,15 +132,15 @@ namespace dgn
 
                 // Translate the triangle as conceptually moving the AABB to origin
                 // This is the same as we did with the point in triangle test
-                v0 -= c;
-                v1 -= c;
-                v2 -= c;
+                tri.p1 -= c;
+                tri.p2 -= c;
+                tri.p3 -= c;
 
                 // Compute the edge vectors of the triangle  (ABC)
                 // That is, get the lines between the points as vectors
-                m3d::vec3 f0 = v1 - v0; // B - A
-                m3d::vec3 f1 = v2 - v1; // C - B
-                m3d::vec3 f2 = v0 - v2; // A - C
+                m3d::vec3 f0 = tri.p2 - tri.p1; // B - A
+                m3d::vec3 f1 = tri.p3 - tri.p2; // C - B
+                m3d::vec3 f2 = tri.p1 - tri.p3; // A - C
 
                 // Compute the face normals of the AABB, because the AABB
                 // is at center, and of course axis aligned, we know that
@@ -129,66 +158,44 @@ namespace dgn
                 // of the triangle. The result is 9 axis of seperation
                 // https://awwapp.com/b/umzoc8tiv/
 
-                // Compute the 9 axis
-                m3d::vec3 axis_u0_f0 = m3d::vec3::cross(u0, f0);
-                m3d::vec3 axis_u0_f1 = m3d::vec3::cross(u0, f1);
-                m3d::vec3 axis_u0_f2 = m3d::vec3::cross(u0, f2);
-
-                m3d::vec3 axis_u1_f0 = m3d::vec3::cross(u1, f0);
-                m3d::vec3 axis_u1_f1 = m3d::vec3::cross(u1, f1);
-                m3d::vec3 axis_u1_f2 = m3d::vec3::cross(u2, f2);
-
-                m3d::vec3 axis_u2_f0 = m3d::vec3::cross(u2, f0);
-                m3d::vec3 axis_u2_f1 = m3d::vec3::cross(u2, f1);
-                m3d::vec3 axis_u2_f2 = m3d::vec3::cross(u2, f2);
-
-                // Testing axis: axis_u0_f0
-                // Project all 3 vertices of the triangle onto the Seperating axis
-                float p0 = m3d::vec3::dot(v0, axis_u0_f0);
-                float p1 = m3d::vec3::dot(v1, axis_u0_f0);
-                float p2 = m3d::vec3::dot(v2, axis_u0_f0);
-                // Project the AABB onto the seperating axis
-                // We don't care about the end points of the prjection
-                // just the length of the half-size of the AABB
-                // That is, we're only casting the extents onto the
-                // seperating axis, not the AABB center. We don't
-                // need to cast the center, because we know that the
-                // aabb is at origin compared to the triangle!
-                float r = e.x * std::abs(m3d::vec3::dot(u0, axis_u0_f0)) +
-                            e.y * std::abs(m3d::vec3::dot(u1, axis_u0_f0)) +
-                            e.z * std::abs(m3d::vec3::dot(u2, axis_u0_f0));
-                // Now do the actual test, basically see if either of
-                // the most extreme of the triangle points intersects r
-                // You might need to write Min & Max functions that take 3 arguments
-                if (std::max(-std::max(p0, std::max(p1, p2)), std::min(p0, std::min(p1, p2))) > r) {
-                    // This means BOTH of the points of the projected triangle
-                    // are outside the projected half-length of the AABB
-                    // Therefore the axis is seperating and we can exit
-                    res.hit = false;
-                    break;
-                }
-
-                // Repeat this test for the other 8 seperating axis
-                // You may wish to make some kind of a helper function to keep
-                // things readable
-                //TODO: 8 more SAT tests
-
                 // Next, we have 3 face normals from the AABB
                 // for these tests we are conceptually checking if the bounding box
                 // of the triangle intersects the bounding box of the AABB
                 // that is to say, the seperating axis for all tests are axis aligned:
                 // axis1: (1, 0, 0), axis2: (0, 1, 0), axis3 (0, 0, 1)
-                //TODO: 3 SAT tests
-                // Do the SAT given the 3 primary axis of the AABB
-                // You already have vectors for this: u0, u1 & u2
 
                 // Finally, we have one last axis to test, the face normal of the triangle
                 // We can get the normal of the triangle by crossing the first two line segments
-                m3d::vec3 triangleNormal = m3d::vec3::cross(f0, f1);
-                //TODO: 1 SAT test
 
-                // Passed testing for all 13 seperating axis that exist!
+                m3d::vec3 axis[] =
+                {
+                    m3d::vec3::cross(u0, f0),
+                    m3d::vec3::cross(u0, f1),
+                    m3d::vec3::cross(u0, f2),
+
+                    m3d::vec3::cross(u1, f0),
+                    m3d::vec3::cross(u1, f1),
+                    m3d::vec3::cross(u2, f2),
+
+                    m3d::vec3::cross(u2, f0),
+                    m3d::vec3::cross(u2, f1),
+                    m3d::vec3::cross(u2, f2),
+
+                    u0, u1, u2,
+
+                     m3d::vec3::cross(f0, f1)
+                };
+
                 res.hit = true;
+
+                for(int i = 0; i < 9; i++)
+                {
+                    if(!boxTriangleSAT(tri, e, u0, u1, u2, axis[i]))
+                    {
+                        res.hit = false;
+                        break;
+                    }
+                }
 
                 break;
             }

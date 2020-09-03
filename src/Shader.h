@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 namespace m3d
 {
@@ -19,6 +20,10 @@ namespace dgn
 
     private:
         unsigned m_program;
+
+        static std::unordered_map<std::string, int> econst_ints;
+
+        unsigned genShaderInternal(std::string data, unsigned shader_type);
 
     public:
         Shader();

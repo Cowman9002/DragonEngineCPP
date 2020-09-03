@@ -9,7 +9,7 @@ uniform vec3 uColor;
 const float NEAR_MUL = 1.0;
 const float FAR_MUL = 0.1;
 
-const float FAR = 20.0;
+const float FAR = 8.0;
 
 void main()
 {

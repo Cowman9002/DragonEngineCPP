@@ -47,7 +47,7 @@
 	<GL/glext.h>
 	<GL/glu.h>
 
-1599155621 source:c:\dev\cpp\dragonengine\main.cpp
+1599172209 source:c:\dev\cpp\dragonengine\main.cpp
 	"src/Window.h"
 	"src/Camera.h"
 	"src/ShadowMap.h"
@@ -259,7 +259,7 @@
 1596149922 c:\dev\cpp\dragonengine\include\assimp\postprocess.h
 	"types.h"
 
-1599000636 source:c:\dev\cpp\dragonengine\src\shader.cpp
+1599173975 source:c:\dev\cpp\dragonengine\src\shader.cpp
 	"Shader.h"
 	"d_internal.h"
 	<glad/glad.h>
@@ -273,8 +273,9 @@
 	<m3d/mat3x3.h>
 	<m3d/mat4x4.h>
 
-1598736829 c:\dev\cpp\dragonengine\src\shader.h
+1599173237 c:\dev\cpp\dragonengine\src\shader.h
 	<string>
+	<unordered_map>
 
 1598798076 c:\dev\cpp\dragonengine\include\m3d\vec2.h
 
@@ -375,7 +376,7 @@
 	<m3d/mat4x4.h>
 	<m3d/vec3.h>
 
-1599156167 source:c:\dev\cpp\dragonengine\src\boundingbox.cpp
+1599171957 source:c:\dev\cpp\dragonengine\src\boundingbox.cpp
 	"BoundingBox.h"
 	"d_internal.h"
 	"BoundingSphere.h"
@@ -392,11 +393,12 @@
 
 1599154401 c:\dev\cpp\dragonengine\src\collider.h
 
-1599148786 source:c:\dev\cpp\dragonengine\src\plane.cpp
+1599171843 source:c:\dev\cpp\dragonengine\src\plane.cpp
 	"Plane.h"
 	"d_internal.h"
 	"BoundingBox.h"
 	"BoundingSphere.h"
+	"Triangle.h"
 	<algorithm>
 	<limits>
 	<string>
@@ -406,7 +408,7 @@
 	<m3d/vec3.h>
 	<vector>
 
-1599156228 source:c:\dev\cpp\dragonengine\src\triangle.cpp
+1599171964 source:c:\dev\cpp\dragonengine\src\triangle.cpp
 	"Triangle.h"
 	"d_internal.h"
 	"BoundingBox.h"
@@ -416,6 +418,7 @@
 	<cmath>
 	<string>
 	<m3d/math1D.h>
+	<m3d/vec2.h>
 
 1599149116 c:\dev\cpp\dragonengine\src\triangle.h
 	"Collider.h"

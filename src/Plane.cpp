@@ -3,6 +3,7 @@
 
 #include "BoundingBox.h"
 #include "BoundingSphere.h"
+#include "Triangle.h"
 
 #include <algorithm>
 #include <limits>
@@ -24,6 +25,11 @@ namespace dgn
     float Plane::distanceFrom(const m3d::vec3& point)
     {
         return m3d::vec3::dot(point, normal) - distance;
+    }
+
+    int sign(float v)
+    {
+        return (0.0f < v) - (v < 0.0f);
     }
 
     CollisionData Plane::checkCollision(const Collider* other)
@@ -53,6 +59,26 @@ namespace dgn
                 m3d::vec3 d = m3d::vec3::cross(b->normal, normal);
 
                 res.hit = d.lengthSqr() > 0.0001f;
+
+                break;
+            }
+        case ColliderType::Triangle:
+            {
+                Triangle* b = (Triangle*)other;
+
+                // get signed distances from plane
+                float d1 = distanceFrom(b->p1);
+                float d2 = distanceFrom(b->p2);
+                float d3 = distanceFrom(b->p3);
+
+                if(abs(d1 + d2 + d3) < 0.001) // all equal 0, on plane
+                {
+                    res.hit = true;
+                }
+                else if(!(sign(d1) == sign(d2) && sign(d2) == sign(d3)))
+                {
+                    res.hit = true;
+                }
 
                 break;
             }

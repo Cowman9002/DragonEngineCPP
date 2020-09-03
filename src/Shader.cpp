@@ -18,13 +18,15 @@ namespace dgn
 {
     std::string fileToString(std::string filepath);
 
+    std::unordered_map<std::string, int> Shader::econst_ints;
+
     Shader::Shader() : m_program(0) {}
     void Shader::dispose()
     {
         glCall(glDeleteProgram(m_program));
     }
 
-    static uint32_t genShaderInternal(std::string data, GLenum shader_type)
+    unsigned Shader::genShaderInternal(std::string data, GLenum shader_type)
     {
         if(data.empty()) return 0;
 
@@ -32,6 +34,7 @@ namespace dgn
         std::vector<std::string> lines;
 
         size_t k = 0;
+        size_t j = 0;
         std::string line;
         while(std::getline(stream, line))
         {
@@ -56,7 +59,45 @@ namespace dgn
             }
             else
             {
-                lines.push_back(line);
+                p = line.find("econst");
+
+                if(p != std::string::npos)
+                {
+                    size_t n = line.find(" ");
+                    size_t m = line.find(" ", n + 1);
+                    const char* type = line.substr(n + 1, m - n - 1).c_str();
+                    const char* name = line.substr(m + 1, line.length() - m - 2).c_str();
+
+                    j = data.find("econst", j);
+                    std::string first_half = data.substr(0, j);
+                    j += line.length();
+                    std::string second_half;
+
+
+                    if(type == std::string("int"))
+                    {
+                        auto v = Shader::econst_ints.find(name);
+
+                        if(v != Shader::econst_ints.end())
+                        {
+                            int value = v->second;
+
+                            second_half = std::string("const int ") + name +
+                                        std::string(" = ") + std::to_string(value) + std::string(";") +
+                                        data.substr(j);
+                        }
+                    }
+                    stream = std::istringstream(second_half);
+
+                    data = first_half;
+                    data += second_half;
+
+                }
+                else
+                {
+                    lines.push_back(line);
+                }
+
             }
         }
 
@@ -251,7 +292,7 @@ namespace dgn
 
     void Shader::setEconst(std::string name, int value)
     {
-
+        econst_ints[name] = value;
     }
 }
 
