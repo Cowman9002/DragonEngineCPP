@@ -16,6 +16,8 @@
 #include <m3d/mat3x3.h>
 #include <m3d/mat4x4.h>
 
+#define CONTROLLER true
+
 #define WINDOW_WIDTH 960
 #define WINDOW_HEIGHT 540
 #define WINDOW_TITLE "DRAGON ENGINE"
@@ -25,9 +27,6 @@
 #define SHADOW_NEAR 0.1
 #define SHADOW_FAR 35
 #define CASCADE_SPLIT_BLEND 0.4
-
-#include "src/d_internal.h"
-#include <glad/glad.h>
 
 void updateCamera(dgn::Camera *camera, dgn::Window *window, float delta, bool controller);
 
@@ -75,12 +74,15 @@ int main(int argc, const char* argv[])
     screen_mesh.complete();
 
     dgn::Texture screen_texture;
-    screen_texture.createFromData(nullptr, dgn::TextureData::Float, WINDOW_WIDTH, WINDOW_HEIGHT,
+    screen_texture.createAs2D(nullptr, dgn::TextureData::Float, WINDOW_WIDTH, WINDOW_HEIGHT,
                                   dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Nearest,
                                   dgn::TextureStorage::RGBA16F, dgn::TextureStorage::RGB);
 
     dgn::Shader screen_shader;
     screen_shader.loadFromFiles("res/shaders/screen.vert", "", "res/shaders/screen.frag");
+
+    unsigned screen_u_texture = screen_shader.getUniformLocation("uScreen");
+    unsigned screen_u_color_lut = screen_shader.getUniformLocation("uColorLut");
 
     dgn::Framebuffer screen_fb;
     screen_fb.create();
@@ -143,7 +145,7 @@ int main(int argc, const char* argv[])
     dgn::Texture wood_texture[5];
     dgn::Texture metal_plates_texture[5];
 
-    dgn::Cubemap skybox;
+    dgn::Texture skybox;
     dgn::Shader shader;
     dgn::Shader skin_shader;
 
@@ -151,60 +153,60 @@ int main(int argc, const char* argv[])
     ball = dgn::Mesh::loadFromFile("res/models/ball.obj")[0];
 
     dgn::Texture white_texture;
-    white_texture.loadFromFile("res/textures/white.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    white_texture.loadAs2D("res/textures/white.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     dgn::Texture black_texture;
-    black_texture.loadFromFile("res/textures/black.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    black_texture.loadAs2D("res/textures/black.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
     dgn::Texture irrad_texture[2];
-    irrad_texture[0].loadFromFile("res/textures/irrad_1.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
-    irrad_texture[1].loadFromFile("res/textures/irrad_2.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    irrad_texture[0].loadAs2D("res/textures/irrad_1.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    irrad_texture[1].loadAs2D("res/textures/irrad_2.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
 
-    bricks_texture[0].loadFromFile("res/textures/bricks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    concrete_texture[0].loadFromFile("res/textures/concrete_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    grass_texture[0].loadFromFile("res/textures/ground_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    plaster_texture[0].loadFromFile("res/textures/paint_plaster_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    paint_wood_texture[0].loadFromFile("res/textures/paint_wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    planks_texture[0].loadFromFile("res/textures/planks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    wood_texture[0].loadFromFile("res/textures/wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    metal_plates_texture[0].loadFromFile("res/textures/metal_plates_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    bricks_texture[0].loadAs2D("res/textures/bricks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    concrete_texture[0].loadAs2D("res/textures/concrete_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    grass_texture[0].loadAs2D("res/textures/ground_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    plaster_texture[0].loadAs2D("res/textures/paint_plaster_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    paint_wood_texture[0].loadAs2D("res/textures/paint_wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    planks_texture[0].loadAs2D("res/textures/planks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    wood_texture[0].loadAs2D("res/textures/wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    metal_plates_texture[0].loadAs2D("res/textures/metal_plates_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
 
-    bricks_texture[1].loadFromFile("res/textures/bricks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    concrete_texture[1].loadFromFile("res/textures/concrete_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    grass_texture[1].loadFromFile("res/textures/ground_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    plaster_texture[1].loadFromFile("res/textures/paint_plaster_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    paint_wood_texture[1].loadFromFile("res/textures/paint_wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    planks_texture[1].loadFromFile("res/textures/planks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    wood_texture[1].loadFromFile("res/textures/wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    metal_plates_texture[1].loadFromFile("res/textures/metal_plates_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    bricks_texture[1].loadAs2D("res/textures/bricks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    concrete_texture[1].loadAs2D("res/textures/concrete_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    grass_texture[1].loadAs2D("res/textures/ground_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    plaster_texture[1].loadAs2D("res/textures/paint_plaster_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    paint_wood_texture[1].loadAs2D("res/textures/paint_wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[1].loadAs2D("res/textures/planks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    wood_texture[1].loadAs2D("res/textures/wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    metal_plates_texture[1].loadAs2D("res/textures/metal_plates_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
     bricks_texture[2]       = black_texture;
     concrete_texture[2]     = black_texture;
     grass_texture[2]        = black_texture;
     plaster_texture[2]      = black_texture;
     paint_wood_texture[2]   = black_texture;
-    planks_texture[2].loadFromFile("res/textures/planks_1/metal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[2].loadAs2D("res/textures/planks_1/metal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     wood_texture[2]         = black_texture;
     metal_plates_texture[2] = white_texture;
 
-    bricks_texture[3].loadFromFile("res/textures/bricks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    concrete_texture[3].loadFromFile("res/textures/concrete_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    grass_texture[3].loadFromFile("res/textures/ground_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    plaster_texture[3].loadFromFile("res/textures/paint_plaster_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    paint_wood_texture[3].loadFromFile("res/textures/paint_wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    planks_texture[3].loadFromFile("res/textures/planks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    wood_texture[3].loadFromFile("res/textures/wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    metal_plates_texture[3].loadFromFile("res/textures/metal_plates_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    bricks_texture[3].loadAs2D("res/textures/bricks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    concrete_texture[3].loadAs2D("res/textures/concrete_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    grass_texture[3].loadAs2D("res/textures/ground_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    plaster_texture[3].loadAs2D("res/textures/paint_plaster_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    paint_wood_texture[3].loadAs2D("res/textures/paint_wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[3].loadAs2D("res/textures/planks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    wood_texture[3].loadAs2D("res/textures/wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    metal_plates_texture[3].loadAs2D("res/textures/metal_plates_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
-    bricks_texture[4].loadFromFile("res/textures/bricks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    bricks_texture[4].loadAs2D("res/textures/bricks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     concrete_texture[4] = white_texture;
-    grass_texture[4].loadFromFile("res/textures/ground_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    plaster_texture[4].loadFromFile("res/textures/paint_plaster_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    grass_texture[4].loadAs2D("res/textures/ground_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    plaster_texture[4].loadAs2D("res/textures/paint_plaster_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     paint_wood_texture[4] = white_texture;
-    planks_texture[4].loadFromFile("res/textures/planks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[4].loadAs2D("res/textures/planks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     wood_texture[4] = white_texture;
     metal_plates_texture[4] = white_texture;
 
-    skybox.loadFromDirectory("res/textures/skyboxday/", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    skybox.loadAsCube("res/textures/skyboxday", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
     //skybox.loadFromDirectory("res/textures/skyboxnight/", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
 
     shader.loadFromFiles("res/shaders/pbr_lite.vert", "", "res/shaders/pbr_lite.frag");
@@ -250,7 +252,7 @@ int main(int argc, const char* argv[])
     textures[7] = bricks_texture;
 
     dgn::Texture skin_lut;
-    skin_lut.loadFromFile("res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    skin_lut.loadAs2D("res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
 
     m3d::vec3 sun_dir = m3d::vec3(1.0, -1.0, -1.0).normalized();
 
@@ -263,8 +265,8 @@ int main(int argc, const char* argv[])
     dgn::Camera camera;
 
     #define R_PROBE_SIZE 256
-    dgn::Cubemap reflection_probe_base;
-    reflection_probe_base.createFromData(nullptr, dgn::TextureData::Ubyte, R_PROBE_SIZE, R_PROBE_SIZE, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
+    dgn::Texture reflection_probe_base;
+    reflection_probe_base.createAsCube(nullptr, dgn::TextureData::Ubyte, R_PROBE_SIZE, R_PROBE_SIZE, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
 
     camera.width = R_PROBE_SIZE;
     camera.height = R_PROBE_SIZE;
@@ -304,7 +306,7 @@ int main(int argc, const char* argv[])
     {
         camera.rotation = cam_rotations[i];
 
-        reflection_buffer.setColorAttachment(reflection_probe_base, i, 0, 0);
+        reflection_buffer.setColorAttachment(reflection_probe_base, 0, dgn::Texture::intToFace(i), 0);
         main_window.getRenderer().clear();
 
         main_window.getRenderer().setClipMode(dgn::ClipMode::ZeroToOne);
@@ -326,7 +328,7 @@ int main(int argc, const char* argv[])
         dgn::Shader::uniform(shader_u_irrad[0], 18);
         dgn::Shader::uniform(shader_u_irrad[1], 19);
 
-        main_window.getRenderer().bindCubemap(skybox, 20);
+        main_window.getRenderer().bindTexture(skybox, 20);
         main_window.getRenderer().bindTexture(irrad_texture[0], 18);
         main_window.getRenderer().bindTexture(irrad_texture[1], 19);
 
@@ -347,7 +349,7 @@ int main(int argc, const char* argv[])
 
         main_window.getRenderer().bindMesh(skybox_mesh);
         main_window.getRenderer().bindShader(skybox_shader);
-        main_window.getRenderer().bindCubemap(skybox, 0);
+        main_window.getRenderer().bindTexture(skybox, 0);
 
         dgn::Shader::uniform(skybox_u_vp, camera.getProjection() * camera.getView().toMat3x3().toMat4x4());
         dgn::Shader::uniform(skybox_u_texture, 0);
@@ -385,9 +387,9 @@ int main(int argc, const char* argv[])
 
     const unsigned maxNumMips = 6;
 
-    dgn::Cubemap reflection_probe;
-    reflection_probe.createFromData(nullptr, dgn::TextureData::Ubyte, R_PROBE_SIZE, R_PROBE_SIZE, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
-    main_window.getRenderer().bindCubemap(reflection_probe_base, 0);
+    dgn::Texture reflection_probe;
+    reflection_probe.createAsCube(nullptr, dgn::TextureData::Ubyte, R_PROBE_SIZE, R_PROBE_SIZE, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
+    main_window.getRenderer().bindTexture(reflection_probe_base, 0);
     for(unsigned mip = 0; mip < maxNumMips; mip++)
     {
         unsigned mip_size = R_PROBE_SIZE / std::pow(2, mip);
@@ -402,7 +404,7 @@ int main(int argc, const char* argv[])
         {
             camera.rotation = cam_rotations[i];
 
-            reflection_buffer.setColorAttachment(reflection_probe, i, 0, mip);
+            reflection_buffer.setColorAttachment(reflection_probe, 0, dgn::Texture::intToFace(i), mip);
             main_window.getRenderer().clear();
 
             dgn::Shader::uniform(reflection_probe_u_vp, camera.getProjection() * camera.getView().toMat3x3().toMat4x4());
@@ -411,9 +413,9 @@ int main(int argc, const char* argv[])
         }
     }
 
-    dgn::Cubemap skybox_probe;
-    skybox_probe.createFromData(nullptr, dgn::TextureData::Ubyte, skybox.getWidth(), skybox.getHeight(), dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
-    main_window.getRenderer().bindCubemap(skybox, 0);
+    dgn::Texture skybox_probe;
+    skybox_probe.createAsCube(nullptr, dgn::TextureData::Ubyte, skybox.getWidth(), skybox.getHeight(), dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGBA, dgn::TextureStorage::RGB);
+    main_window.getRenderer().bindTexture(skybox, 0);
     for(unsigned mip = 0; mip < maxNumMips; mip++)
     {
         unsigned mip_size = skybox.getWidth() / std::pow(2, mip);
@@ -428,7 +430,7 @@ int main(int argc, const char* argv[])
         {
             camera.rotation = cam_rotations[i];
 
-            reflection_buffer.setColorAttachment(skybox_probe, i, 0, mip);
+            reflection_buffer.setColorAttachment(skybox_probe, 0, dgn::Texture::intToFace(i), mip);
             main_window.getRenderer().clear();
 
             dgn::Shader::uniform(reflection_probe_u_vp, camera.getProjection() * camera.getView().toMat3x3().toMat4x4());
@@ -438,7 +440,7 @@ int main(int argc, const char* argv[])
     }
 
     main_window.getRenderer().unbindFramebuffer();
-    main_window.getRenderer().unbindCubemap(0);
+    main_window.getRenderer().unbindTexture(0);
     reflection_buffer.dispose();
     reflection_probe_base.dispose();
 
@@ -464,6 +466,19 @@ int main(int argc, const char* argv[])
     int line_u_points[2] = {line_shader.getUniformLocation("uPoints[0]"), line_shader.getUniformLocation("uPoints[1]")};
     int line_u_color = line_shader.getUniformLocation("uColor");
 
+
+    dgn::Shader color_lut_shader;
+    color_lut_shader.loadFromFiles("res/shaders/3d_texture.vert", "", "res/shaders/3d_texture.frag");
+
+    int color_u_mvp = color_lut_shader.getUniformLocation("uMVP");
+    int color_u_texture = color_lut_shader.getUniformLocation("uTexture");
+
+    dgn::Mesh unit_cube;
+    unit_cube = dgn::Mesh::loadFromFile("res/models/cube.obj")[0];
+
+    dgn::Texture lut_texture;
+    lut_texture.loadAs3D("res/textures/3d_lut_colored.png", 16, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGB, 0.0f);
+
     /////////////////////////////////////////////////////////
     //                      MAIN LOOP                      //
     /////////////////////////////////////////////////////////
@@ -472,7 +487,7 @@ int main(int argc, const char* argv[])
     {
         main_window.getInput().pollEvents();
 
-        updateCamera(&camera, &main_window, 1.0f / 60.0f, true);
+        updateCamera(&camera, &main_window, 1.0f / 60.0f, CONTROLLER);
 
         if(main_window.getInput().getKeyDown(dgn::Key::R))
         {
@@ -480,13 +495,14 @@ int main(int argc, const char* argv[])
             skin_shader.loadFromFiles("res/shaders/skin.vert", "", "res/shaders/skin.frag");
             screen_shader.loadFromFiles("res/shaders/screen.vert", "", "res/shaders/screen.frag");
             skybox_shader.loadFromFiles("res/shaders/skybox.vert", "", "res/shaders/skybox.frag");
-            skin_lut.loadFromFile("res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+            skin_lut.loadAs2D("res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+            lut_texture.loadAs3D("res/textures/3d_lut_colored.png", 16, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGB, 0.0f);
         }
 
 
         if(main_window.getInput().getKeyDown(dgn::Key::P))
         {
-            logMessagef("%f, %f, %f\n", camera.position.x, camera.position.y, camera.position.z);
+            printf("%f, %f, %f\n", camera.position.x, camera.position.y, camera.position.z);
         }
 
         for(int i = 0; i < SHADOW_CASCADES; i++)
@@ -576,7 +592,7 @@ int main(int argc, const char* argv[])
             dgn::Shader::uniform(shader_u_cascade_depths[i], clip);
         }
 
-        main_window.getRenderer().bindCubemap(skybox_probe, 20);
+        main_window.getRenderer().bindTexture(skybox_probe, 20);
         //main_window.getRenderer().bindCubemap(reflection_probe, 20);
         main_window.getRenderer().bindTexture(irrad_texture[0], 18);
         main_window.getRenderer().bindTexture(irrad_texture[1], 19);
@@ -605,7 +621,7 @@ int main(int argc, const char* argv[])
         //main_window.getRenderer().bindTexture(white_texture, 1);
         //main_window.getRenderer().bindTexture(white_texture, 0);
 
-        main_window.getRenderer().bindCubemap(reflection_probe, 20);
+        main_window.getRenderer().bindTexture(reflection_probe, 20);
         main_window.getRenderer().bindMesh(ball);
         main_window.getRenderer().drawBoundMesh();
 
@@ -620,6 +636,23 @@ int main(int argc, const char* argv[])
 
         main_window.getRenderer().drawBoundMesh();
 
+
+
+        main_window.getRenderer().bindShader(color_lut_shader);
+        main_window.getRenderer().bindTexture(lut_texture, 0);
+
+        dgn::Shader::uniform(color_u_mvp, mvp * m3d::mat4x4(1.0f).translate(m3d::vec3(0.0f, 5.0f, -3.0f)));
+        dgn::Shader::uniform(color_u_texture, 0);
+
+        main_window.getRenderer().bindMesh(unit_cube);
+
+        main_window.getRenderer().drawBoundMesh();
+
+        main_window.getRenderer().unbindMesh();
+        main_window.getRenderer().unbindTexture(0);
+        main_window.getRenderer().unbindShader();
+
+
         /////////////////////////////////////////////
         //              RENDER CUBEMAP             //
         /////////////////////////////////////////////
@@ -628,7 +661,7 @@ int main(int argc, const char* argv[])
 
         main_window.getRenderer().bindMesh(skybox_mesh);
         main_window.getRenderer().bindShader(skybox_shader);
-        main_window.getRenderer().bindCubemap(skybox, 0);
+        main_window.getRenderer().bindTexture(skybox, 0);
 
         dgn::Shader::uniform(skybox_u_vp, camera.getProjection() * camera.getView().toMat3x3().toMat4x4());
         dgn::Shader::uniform(skybox_u_texture, 0);
@@ -733,7 +766,12 @@ int main(int argc, const char* argv[])
         main_window.getRenderer().bindShader(screen_shader);
 
         main_window.getRenderer().bindTexture(screen_texture, 0);
+        main_window.getRenderer().bindTexture(lut_texture, 1);
         //main_window.getRenderer().bindTexture(shadowmap.getTexture(), 0);
+
+        dgn::Shader::uniform(screen_u_texture, 0);
+        dgn::Shader::uniform(screen_u_color_lut, 1);
+
         main_window.getRenderer().bindMesh(screen_mesh);
         main_window.getRenderer().drawBoundMesh();
 
@@ -1009,6 +1047,6 @@ void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer&
     renderer.drawBoundMesh();
 }
 
-//TODO: 3d textures
+//TODO: move physics to new "Tiger Engine"
 
 //TODO: make first dll and start demo game

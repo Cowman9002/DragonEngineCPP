@@ -47,7 +47,7 @@
 	<GL/glext.h>
 	<GL/glu.h>
 
-1599172209 source:c:\dev\cpp\dragonengine\main.cpp
+1599255743 source:c:\dev\cpp\dragonengine\main.cpp
 	"src/Window.h"
 	"src/Camera.h"
 	"src/ShadowMap.h"
@@ -63,8 +63,6 @@
 	<m3d/vec4.h>
 	<m3d/mat3x3.h>
 	<m3d/mat4x4.h>
-	"src/d_internal.h"
-	<glad/glad.h>
 
 1598795993 c:\dev\cpp\dragonengine\src\window.h
 	<string>
@@ -90,13 +88,13 @@
 	<glad/glad.h>
 	<stdio.h>
 
-1599093496 source:c:\dev\cpp\dragonengine\src\renderer.cpp
+1599250689 source:c:\dev\cpp\dragonengine\src\renderer.cpp
 	"Renderer.h"
 	"d_internal.h"
 	<glad/glad.h>
 	<GLFW/glfw3.h>
 
-1599093481 c:\dev\cpp\dragonengine\src\renderer.h
+1599250273 c:\dev\cpp\dragonengine\src\renderer.h
 	"Mesh.h"
 	"Shader.h"
 	"Texture.h"
@@ -303,27 +301,23 @@
 	<iostream>
 	"lodepng.h"
 
-1599132133 source:c:\dev\cpp\dragonengine\src\texture.cpp
+1599255139 source:c:\dev\cpp\dragonengine\src\texture.cpp
 	"Texture.h"
 	"d_internal.h"
 	"lodepng.h"
 	<glad/glad.h>
+	<vector>
+	<cmath>
 
-1599046341 c:\dev\cpp\dragonengine\src\texture.h
+1599252374 c:\dev\cpp\dragonengine\src\texture.h
 	<string>
 	"textureEnums.h"
 
-1599132138 c:\dev\cpp\dragonengine\src\textureenums.h
+1599255129 c:\dev\cpp\dragonengine\src\textureenums.h
 
-1599139973 source:c:\dev\cpp\dragonengine\src\cubemap.cpp
-	"Cubemap.h"
-	"d_internal.h"
-	"lodepng.h"
-	<glad/glad.h>
+1599249015 source:c:\dev\cpp\dragonengine\src\cubemap.cpp
 
-1599139750 c:\dev\cpp\dragonengine\src\cubemap.h
-	<string>
-	"textureEnums.h"
+1599249007 c:\dev\cpp\dragonengine\src\cubemap.h
 
 1598897224 source:c:\dev\cpp\dragonengine\src\camera.cpp
 	"Camera.h"
@@ -336,7 +330,7 @@
 
 1598800668 c:\dev\cpp\dragonengine\include\m3d\quat.h
 
-1599132406 source:c:\dev\cpp\dragonengine\src\framebuffer.cpp
+1599251390 source:c:\dev\cpp\dragonengine\src\framebuffer.cpp
 	"Framebuffer.h"
 	"d_internal.h"
 	"Texture.h"
@@ -344,7 +338,8 @@
 	<glad/glad.h>
 	<vector>
 
-1599132372 c:\dev\cpp\dragonengine\src\framebuffer.h
+1599251349 c:\dev\cpp\dragonengine\src\framebuffer.h
+	"textureEnums.h"
 
 1599155541 source:c:\dev\cpp\dragonengine\src\boundingsphere.cpp
 	"BoundingSphere.h"
@@ -361,7 +356,7 @@
 	<m3d/vec3.h>
 	<vector>
 
-1598899833 source:c:\dev\cpp\dragonengine\src\shadowmap.cpp
+1599251380 source:c:\dev\cpp\dragonengine\src\shadowmap.cpp
 	"ShadowMap.h"
 	<m3d/quat.h>
 	<m3d/vec4.h>

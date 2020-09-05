@@ -39,4 +39,22 @@ namespace dgn
         Ubyte = 0x1401,
         Float = 0x1406
     };
+
+    enum class TextureType
+    {
+        Texture1D = 0x0DE0,
+        Texture2D = 0x0DE1,
+        Texture3D = 0x806F,
+        TextureCube = 0x8513
+    };
+
+    enum class CubemapFace
+    {
+        East = 0,
+        West,
+        Up,
+        Down,
+        North,
+        South
+    };
 }

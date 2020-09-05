@@ -5,6 +5,7 @@ layout(location = 0) out vec4 fragColor;
 varying vec2 vTexcoord;
 
 uniform sampler2D uScreen;
+uniform sampler3D uColorLut;
 
 const float A = 0.6;
 const float B = 0.45333;
@@ -23,6 +24,9 @@ void main()
 	
 	// gamma correction
 	color = pow(color, vec3(1.0 / 2.2));
+	
+	
+	color = texture3D(uColorLut, color).rgb;
 	
 	fragColor = vec4(color, 1.0);
 }

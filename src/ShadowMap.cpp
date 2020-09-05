@@ -15,7 +15,7 @@ namespace dgn
 
     ShadowMap& ShadowMap::initialize(unsigned width, unsigned height)
     {
-        m_texture.createFromData(nullptr, dgn::TextureData::Float, width, height, dgn::TextureWrap::ClampToBorder,
+        m_texture.createAs2D(nullptr, dgn::TextureData::Float, width, height, dgn::TextureWrap::ClampToBorder,
                                  dgn::TextureFilter::Nearest, dgn::TextureStorage::Depth, dgn::TextureStorage::Depth);
         m_texture.setBorderColor(1.0f, 1.0f, 1.0f, 1.0f);
 

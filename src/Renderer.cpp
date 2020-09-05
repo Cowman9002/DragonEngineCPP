@@ -46,14 +46,7 @@ namespace dgn
     {
         glCall(glActiveTexture(GL_TEXTURE0 + slot));
 
-        glCall(glBindTexture(GL_TEXTURE_2D, texture.m_texture));
-    }
-
-    void Renderer::bindCubemap(const Cubemap& cubemap, unsigned slot)
-    {
-        glCall(glActiveTexture(GL_TEXTURE0 + slot));
-
-        glCall(glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.m_texture));
+        glCall(glBindTexture((unsigned)texture.getTextureType(), texture.m_texture));
     }
 
     void Renderer::bindFramebuffer(const Framebuffer& framebuffer)
@@ -78,13 +71,6 @@ namespace dgn
         glCall(glActiveTexture(GL_TEXTURE0 + slot));
 
         glCall(glBindTexture(GL_TEXTURE_2D, 0));
-    }
-
-    void Renderer::unbindCubemap(unsigned slot)
-    {
-        glCall(glActiveTexture(GL_TEXTURE0 + slot));
-
-        glCall(glBindTexture(GL_TEXTURE_CUBE_MAP, 0));
     }
 
     void Renderer::unbindFramebuffer()

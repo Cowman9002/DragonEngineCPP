@@ -28,22 +28,63 @@ namespace dgn
         return *this;
     }
 
+    Framebuffer& Framebuffer::setAttachment(Texture texture, TextureType type, unsigned attachment, unsigned mip, unsigned layer, CubemapFace face)
+    {
+        switch(type)
+        {
+        case TextureType::Texture1D:
+            {
+                glCall(glFramebufferTexture1D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_1D, texture.getNativeTexture(), mip));
+                break;
+            }
+        case TextureType::Texture2D:
+            {
+                glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, texture.getNativeTexture(), mip));
+                break;
+            }
+        case TextureType::Texture3D:
+            {
+                glCall(glFramebufferTexture3D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_3D, texture.getNativeTexture(), mip, layer));
+                break;
+            }
+        case TextureType::TextureCube:
+            {
+                glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X + (unsigned)face, texture.getNativeTexture(), mip));
+                break;
+            }
+        }
+
+        return *this;
+    }
+
     Framebuffer& Framebuffer::setColorAttachment(dgn::Texture texture, unsigned slot, unsigned mip)
     {
-        glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, texture.getNativeTexture(), mip));
-        return *this;
+        return setAttachment(texture, texture.getTextureType(), GL_COLOR_ATTACHMENT0 + slot, mip, 0, CubemapFace::East);
     }
 
-    Framebuffer& Framebuffer::setColorAttachment(dgn::Cubemap cubemap, unsigned face, unsigned slot, unsigned mip)
+    Framebuffer& Framebuffer::setColorAttachment(dgn::Texture texture, unsigned slot, unsigned layer, unsigned mip)
     {
-        glCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, cubemap.getNativeTexture(), mip));
-        return *this;
+        return setAttachment(texture, texture.getTextureType(), GL_COLOR_ATTACHMENT0 + slot, mip, layer, CubemapFace::East);
     }
 
-    Framebuffer& Framebuffer::setDepthAttachment(dgn::Texture texture)
+    Framebuffer& Framebuffer::setColorAttachment(dgn::Texture texture, unsigned slot, CubemapFace face, unsigned mip)
     {
-        glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture.getNativeTexture(), 0));
-        return *this;
+        return setAttachment(texture, texture.getTextureType(), GL_COLOR_ATTACHMENT0 + slot, mip, 0, face);
+    }
+
+    Framebuffer& Framebuffer::setDepthAttachment(dgn::Texture texture, unsigned mip)
+    {
+        return setAttachment(texture, texture.getTextureType(), GL_DEPTH_ATTACHMENT, mip, 0, CubemapFace::East);
+    }
+
+    Framebuffer& Framebuffer::setDepthAttachment(dgn::Texture texture, unsigned layer, unsigned mip)
+    {
+        return setAttachment(texture, texture.getTextureType(), GL_DEPTH_ATTACHMENT, mip, layer, CubemapFace::East);
+    }
+
+    Framebuffer& Framebuffer::setDepthAttachment(dgn::Texture texture, CubemapFace face, unsigned mip)
+    {
+        return setAttachment(texture, texture.getTextureType(), GL_DEPTH_ATTACHMENT, mip, 0, face);
     }
 
     Framebuffer& Framebuffer::createDepthBit(unsigned width, unsigned height)
@@ -56,6 +97,7 @@ namespace dgn
     Framebuffer& Framebuffer::removeDepthBit()
     {
         glCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0));
+        return *this;
     }
 
     Framebuffer& Framebuffer::complete()

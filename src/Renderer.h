@@ -103,13 +103,11 @@ namespace dgn
         void bindMesh(const Mesh& mesh);
         void bindShader(const Shader& shader);
         void bindTexture(const Texture& texture, unsigned slot);
-        void bindCubemap(const Cubemap& cubemap, unsigned slot);
         void bindFramebuffer(const Framebuffer& framebuffer);
 
         void unbindMesh();
         void unbindShader();
         void unbindTexture(unsigned slot);
-        void unbindCubemap(unsigned slot);
         void unbindFramebuffer();
 
         void drawBoundMesh() const;

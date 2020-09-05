@@ -53,8 +53,6 @@
 		<Unit filename="src/Camera.cpp" />
 		<Unit filename="src/Camera.h" />
 		<Unit filename="src/Collider.h" />
-		<Unit filename="src/Cubemap.cpp" />
-		<Unit filename="src/Cubemap.h" />
 		<Unit filename="src/Framebuffer.cpp" />
 		<Unit filename="src/Framebuffer.h" />
 		<Unit filename="src/Input.cpp" />
