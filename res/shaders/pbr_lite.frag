@@ -1,7 +1,7 @@
 #version 330 core
 
-#include std/pbr.glh
-#include std/shadows.glh
+#include src/std/pbr.glh
+#include src/std/shadows.glh
 
 layout(location = 0) out vec3 fragColor;
 

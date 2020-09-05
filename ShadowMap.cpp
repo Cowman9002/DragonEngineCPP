@@ -7,7 +7,7 @@
 
 #include "math.h"
 
-#include "BoundingSphere.h"
+#include "TigerEngine/Sphere.h"
 
 namespace dgn
 {
@@ -92,26 +92,25 @@ namespace dgn
 
         /** -- Rotation shimmering -- **/
 
-        dgn::BoundingSphere sphere;
-        sphere.generateFromPoints(frustum_corners_L);
-        sphere.radius *= scale_value;
+        tgr::Sphere sphere;
+        sphere.genFromPoints(frustum_corners_L);
+        sphere.setRadius(sphere.getRadius() * scale_value);
 
         /** -- Position shimmering -- **/
-        float rx2 = sphere.radius * 2.0f;
-        m3d::vec2 texel_world_size = m3d::vec2(rx2 / m_texture.getWidth(),
-                                rx2 / m_texture.getHeight());
+        float rx2 = sphere.getRadius() * 2.0f;
+        m3d::vec3 texel_world_size = m3d::vec3(rx2 / m_texture.getWidth(),
+                                rx2 / m_texture.getHeight(), 1.0f);
 
-        sphere.position.x /= texel_world_size.x;
-        sphere.position.y /= texel_world_size.y;
+        sphere.setCenter(m3d::vec3::invScale(sphere.getCenter(), texel_world_size));
 
-        sphere.position.x = floor(sphere.position.x);
-        sphere.position.y = floor(sphere.position.y);
+        sphere.setCenter(m3d::vec3(floor(sphere.getCenter().x),
+                                   floor(sphere.getCenter().y),
+                                   sphere.getCenter().z));
 
-        sphere.position.x *= texel_world_size.x;
-        sphere.position.y *= texel_world_size.y;
+        sphere.setCenter(m3d::vec3::scale(sphere.getCenter(), texel_world_size));
 
-        m3d::vec3 max = sphere.position + m3d::vec3(sphere.radius);
-        m3d::vec3 min = sphere.position - m3d::vec3(sphere.radius);
+        m3d::vec3 max = sphere.getCenter() + m3d::vec3(sphere.getRadius());
+        m3d::vec3 min = sphere.getCenter() - m3d::vec3(sphere.getRadius());
 
         m_projection = m3d::mat4x4::initOrtho(max.x, min.x, max.y, min.y, min.z - near_pull, max.z);
         return *this;

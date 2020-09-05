@@ -1,10 +1,6 @@
-#include "src/Window.h"
-#include "src/Camera.h"
-#include "src/ShadowMap.h"
-#include "src/BoundingBox.h"
-#include "src/BoundingSphere.h"
-#include "src/Plane.h"
-#include "src/Triangle.h"
+#include "Window.h"
+#include "Camera.h"
+#include "ShadowMap.h"
 
 #include <stdio.h>
 #include <algorithm>
@@ -15,6 +11,10 @@
 #include <m3d/vec4.h>
 #include <m3d/mat3x3.h>
 #include <m3d/mat4x4.h>
+
+#include <TigerEngine/AABB.h>
+#include <TigerEngine/Sphere.h>
+#include <TigerEngine/Plane.h>
 
 #define CONTROLLER true
 
@@ -30,11 +30,11 @@
 
 void updateCamera(dgn::Camera *camera, dgn::Window *window, float delta, bool controller);
 
-void drawLineBox(const dgn::BoundingBox& box, int uniforms[], const dgn::Renderer& renderer);
-void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn::Renderer& renderer);
-void drawPlane(const dgn::Plane& plane, int uniforms[], const dgn::Renderer& renderer);
+void drawLineBox(const tgr::AABB& box, int uniforms[], const dgn::Renderer& renderer);
+void drawLineSphere(const tgr::Sphere& sphere, int uniforms[], const dgn::Renderer& renderer);
+void drawPlane(const tgr::Plane& plane, int uniforms[], const dgn::Renderer& renderer);
 void drawPoint(const m3d::vec3& point, int uniforms[], const dgn::Renderer& renderer);
-void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer& renderer);
+//void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer& renderer);
 
 int main(int argc, const char* argv[])
 {
@@ -79,7 +79,7 @@ int main(int argc, const char* argv[])
                                   dgn::TextureStorage::RGBA16F, dgn::TextureStorage::RGB);
 
     dgn::Shader screen_shader;
-    screen_shader.loadFromFiles("res/shaders/screen.vert", "", "res/shaders/screen.frag");
+    screen_shader.loadFromFiles("src/res/shaders/screen.vert", "", "src/res/shaders/screen.frag");
 
     unsigned screen_u_texture = screen_shader.getUniformLocation("uScreen");
     unsigned screen_u_color_lut = screen_shader.getUniformLocation("uColorLut");
@@ -112,7 +112,7 @@ int main(int argc, const char* argv[])
     }
 
     dgn::Shader shadow_shader;
-    shadow_shader.loadFromFiles("res/shaders/shadow.vert", "", "");
+    shadow_shader.loadFromFiles("src/res/shaders/shadow.vert", "", "");
 
     int shadow_u_light = shadow_shader.getUniformLocation("uLight");
     int shadow_u_model = shadow_shader.getUniformLocation("uModel");
@@ -122,10 +122,10 @@ int main(int argc, const char* argv[])
     /////////////////////////////////////////////////////
 
     dgn::Mesh skybox_mesh;
-    skybox_mesh = dgn::Mesh::loadFromFile("res/models/skybox.obj")[0];
+    skybox_mesh = dgn::Mesh::loadFromFile("src/res/models/skybox.obj")[0];
 
     dgn::Shader skybox_shader;
-    skybox_shader.loadFromFiles("res/shaders/skybox.vert", "", "res/shaders/skybox.frag");
+    skybox_shader.loadFromFiles("src/res/shaders/skybox.vert", "", "src/res/shaders/skybox.frag");
 
     int skybox_u_vp        = skybox_shader.getUniformLocation("uVP");
     int skybox_u_texture   = skybox_shader.getUniformLocation("uTexture");
@@ -149,68 +149,68 @@ int main(int argc, const char* argv[])
     dgn::Shader shader;
     dgn::Shader skin_shader;
 
-    scene = dgn::Mesh::loadFromFile("res/models/forest_level.obj");
-    ball = dgn::Mesh::loadFromFile("res/models/ball.obj")[0];
+    scene = dgn::Mesh::loadFromFile("src/res/models/forest_level.obj");
+    ball = dgn::Mesh::loadFromFile("src/res/models/ball.obj")[0];
 
     dgn::Texture white_texture;
-    white_texture.loadAs2D("res/textures/white.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    white_texture.loadAs2D("src/res/textures/white.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     dgn::Texture black_texture;
-    black_texture.loadAs2D("res/textures/black.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    black_texture.loadAs2D("src/res/textures/black.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
     dgn::Texture irrad_texture[2];
-    irrad_texture[0].loadAs2D("res/textures/irrad_1.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
-    irrad_texture[1].loadAs2D("res/textures/irrad_2.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    irrad_texture[0].loadAs2D("src/res/textures/irrad_1.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    irrad_texture[1].loadAs2D("src/res/textures/irrad_2.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
 
-    bricks_texture[0].loadAs2D("res/textures/bricks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    concrete_texture[0].loadAs2D("res/textures/concrete_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    grass_texture[0].loadAs2D("res/textures/ground_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    plaster_texture[0].loadAs2D("res/textures/paint_plaster_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    paint_wood_texture[0].loadAs2D("res/textures/paint_wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    planks_texture[0].loadAs2D("res/textures/planks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    wood_texture[0].loadAs2D("res/textures/wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    metal_plates_texture[0].loadAs2D("res/textures/metal_plates_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    bricks_texture[0].loadAs2D("src/res/textures/bricks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    concrete_texture[0].loadAs2D("src/res/textures/concrete_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    grass_texture[0].loadAs2D("src/res/textures/ground_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    plaster_texture[0].loadAs2D("src/res/textures/paint_plaster_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    paint_wood_texture[0].loadAs2D("src/res/textures/paint_wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    planks_texture[0].loadAs2D("src/res/textures/planks_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    wood_texture[0].loadAs2D("src/res/textures/wood_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    metal_plates_texture[0].loadAs2D("src/res/textures/metal_plates_1/color.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
 
-    bricks_texture[1].loadAs2D("res/textures/bricks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    concrete_texture[1].loadAs2D("res/textures/concrete_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    grass_texture[1].loadAs2D("res/textures/ground_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    plaster_texture[1].loadAs2D("res/textures/paint_plaster_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    paint_wood_texture[1].loadAs2D("res/textures/paint_wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    planks_texture[1].loadAs2D("res/textures/planks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    wood_texture[1].loadAs2D("res/textures/wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    metal_plates_texture[1].loadAs2D("res/textures/metal_plates_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    bricks_texture[1].loadAs2D("src/res/textures/bricks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    concrete_texture[1].loadAs2D("src/res/textures/concrete_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    grass_texture[1].loadAs2D("src/res/textures/ground_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    plaster_texture[1].loadAs2D("src/res/textures/paint_plaster_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    paint_wood_texture[1].loadAs2D("src/res/textures/paint_wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[1].loadAs2D("src/res/textures/planks_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    wood_texture[1].loadAs2D("src/res/textures/wood_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    metal_plates_texture[1].loadAs2D("src/res/textures/metal_plates_1/rough.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
     bricks_texture[2]       = black_texture;
     concrete_texture[2]     = black_texture;
     grass_texture[2]        = black_texture;
     plaster_texture[2]      = black_texture;
     paint_wood_texture[2]   = black_texture;
-    planks_texture[2].loadAs2D("res/textures/planks_1/metal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[2].loadAs2D("src/res/textures/planks_1/metal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     wood_texture[2]         = black_texture;
     metal_plates_texture[2] = white_texture;
 
-    bricks_texture[3].loadAs2D("res/textures/bricks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    concrete_texture[3].loadAs2D("res/textures/concrete_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    grass_texture[3].loadAs2D("res/textures/ground_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    plaster_texture[3].loadAs2D("res/textures/paint_plaster_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    paint_wood_texture[3].loadAs2D("res/textures/paint_wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    planks_texture[3].loadAs2D("res/textures/planks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    wood_texture[3].loadAs2D("res/textures/wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    metal_plates_texture[3].loadAs2D("res/textures/metal_plates_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    bricks_texture[3].loadAs2D("src/res/textures/bricks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    concrete_texture[3].loadAs2D("src/res/textures/concrete_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    grass_texture[3].loadAs2D("src/res/textures/ground_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    plaster_texture[3].loadAs2D("src/res/textures/paint_plaster_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    paint_wood_texture[3].loadAs2D("src/res/textures/paint_wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[3].loadAs2D("src/res/textures/planks_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    wood_texture[3].loadAs2D("src/res/textures/wood_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    metal_plates_texture[3].loadAs2D("src/res/textures/metal_plates_1/normal.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
 
-    bricks_texture[4].loadAs2D("res/textures/bricks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    bricks_texture[4].loadAs2D("src/res/textures/bricks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     concrete_texture[4] = white_texture;
-    grass_texture[4].loadAs2D("res/textures/ground_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
-    plaster_texture[4].loadAs2D("res/textures/paint_plaster_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    grass_texture[4].loadAs2D("src/res/textures/ground_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    plaster_texture[4].loadAs2D("src/res/textures/paint_plaster_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     paint_wood_texture[4] = white_texture;
-    planks_texture[4].loadAs2D("res/textures/planks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
+    planks_texture[4].loadAs2D("src/res/textures/planks_1/ao.png", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::RGB);
     wood_texture[4] = white_texture;
     metal_plates_texture[4] = white_texture;
 
-    skybox.loadAsCube("res/textures/skyboxday", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
-    //skybox.loadFromDirectory("res/textures/skyboxnight/", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    skybox.loadAsCube("src/res/textures/skyboxday", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
+    //skybox.loadFromDirectory("src/res/textures/skyboxnight/", dgn::TextureWrap::Repeat, dgn::TextureFilter::Trilinear, dgn::TextureStorage::SRGB);
 
-    shader.loadFromFiles("res/shaders/pbr_lite.vert", "", "res/shaders/pbr_lite.frag");
-    skin_shader.loadFromFiles("res/shaders/skin.vert", "", "res/shaders/skin.frag");
+    shader.loadFromFiles("src/res/shaders/pbr_lite.vert", "", "src/res/shaders/pbr_lite.frag");
+    skin_shader.loadFromFiles("src/res/shaders/skin.vert", "", "src/res/shaders/skin.frag");
 
     int shader_u_mvp        = shader.getUniformLocation("uMVP");
     //int shader_u_norm_mat   = shader.getUniformLocation("uNormMat");
@@ -252,7 +252,7 @@ int main(int argc, const char* argv[])
     textures[7] = bricks_texture;
 
     dgn::Texture skin_lut;
-    skin_lut.loadAs2D("res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+    skin_lut.loadAs2D("src/res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
 
     m3d::vec3 sun_dir = m3d::vec3(1.0, -1.0, -1.0).normalized();
 
@@ -374,7 +374,7 @@ int main(int argc, const char* argv[])
 
 
     dgn::Shader reflection_probe_shader;
-    reflection_probe_shader.loadFromFiles("res/shaders/skybox.vert", "", "res/shaders/reflectionProbe.frag");
+    reflection_probe_shader.loadFromFiles("src/res/shaders/skybox.vert", "", "src/res/shaders/reflectionProbe.frag");
 
     int reflection_probe_u_vp        = reflection_probe_shader.getUniformLocation("uVP");
     int reflection_probe_u_texture   = reflection_probe_shader.getUniformLocation("uTexture");
@@ -460,7 +460,7 @@ int main(int argc, const char* argv[])
     line_mesh.complete();
 
     dgn::Shader line_shader;
-    line_shader.loadFromFiles("res/shaders/line.vert", "", "res/shaders/line.frag");
+    line_shader.loadFromFiles("src/res/shaders/line.vert", "", "src/res/shaders/line.frag");
 
     int line_u_mvp = line_shader.getUniformLocation("uMVP");
     int line_u_points[2] = {line_shader.getUniformLocation("uPoints[0]"), line_shader.getUniformLocation("uPoints[1]")};
@@ -468,16 +468,16 @@ int main(int argc, const char* argv[])
 
 
     dgn::Shader color_lut_shader;
-    color_lut_shader.loadFromFiles("res/shaders/3d_texture.vert", "", "res/shaders/3d_texture.frag");
+    color_lut_shader.loadFromFiles("src/res/shaders/3d_texture.vert", "", "src/res/shaders/3d_texture.frag");
 
     int color_u_mvp = color_lut_shader.getUniformLocation("uMVP");
     int color_u_texture = color_lut_shader.getUniformLocation("uTexture");
 
     dgn::Mesh unit_cube;
-    unit_cube = dgn::Mesh::loadFromFile("res/models/cube.obj")[0];
+    unit_cube = dgn::Mesh::loadFromFile("src/res/models/cube.obj")[0];
 
     dgn::Texture lut_texture;
-    lut_texture.loadAs3D("res/textures/3d_lut_colored.png", 16, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGB, 0.0f);
+    lut_texture.loadAs3D("src/res/textures/3d_lut_colored.png", 16, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGB, 0.0f);
 
     /////////////////////////////////////////////////////////
     //                      MAIN LOOP                      //
@@ -491,12 +491,12 @@ int main(int argc, const char* argv[])
 
         if(main_window.getInput().getKeyDown(dgn::Key::R))
         {
-            shader.loadFromFiles("res/shaders/pbr_lite.vert", "", "res/shaders/pbr_lite.frag");
-            skin_shader.loadFromFiles("res/shaders/skin.vert", "", "res/shaders/skin.frag");
-            screen_shader.loadFromFiles("res/shaders/screen.vert", "", "res/shaders/screen.frag");
-            skybox_shader.loadFromFiles("res/shaders/skybox.vert", "", "res/shaders/skybox.frag");
-            skin_lut.loadAs2D("res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
-            lut_texture.loadAs3D("res/textures/3d_lut_colored.png", 16, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGB, 0.0f);
+            shader.loadFromFiles("src/res/shaders/pbr_lite.vert", "", "src/res/shaders/pbr_lite.frag");
+            skin_shader.loadFromFiles("src/res/shaders/skin.vert", "", "src/res/shaders/skin.frag");
+            screen_shader.loadFromFiles("src/res/shaders/screen.vert", "", "src/res/shaders/screen.frag");
+            skybox_shader.loadFromFiles("src/res/shaders/skybox.vert", "", "src/res/shaders/skybox.frag");
+            skin_lut.loadAs2D("src/res/textures/skin_lut.png", dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::SRGB);
+            lut_texture.loadAs3D("src/res/textures/3d_lut_colored.png", 16, dgn::TextureWrap::ClampToEdge, dgn::TextureFilter::Bilinear, dgn::TextureStorage::RGB, 0.0f);
         }
 
 
@@ -637,7 +637,6 @@ int main(int argc, const char* argv[])
         main_window.getRenderer().drawBoundMesh();
 
 
-
         main_window.getRenderer().bindShader(color_lut_shader);
         main_window.getRenderer().bindTexture(lut_texture, 0);
 
@@ -686,25 +685,25 @@ int main(int argc, const char* argv[])
         main_window.getRenderer().bindShader(line_shader);
         dgn::Shader::uniform(line_u_mvp, camera.getProjection() * camera.getView());
 
-        std::vector<dgn::Collider*> colliders;
+        std::vector<tgr::Collider*> colliders;
 
         m3d::vec3 test_collider_pos = camera.position + m3d::vec3(0.0f, 0.0f, -1.0f) * camera.rotation;
-        dgn::BoundingSphere test_collider = dgn::BoundingSphere(test_collider_pos, 0.2f);
-        //dgn::BoundingBox test_collider = dgn::BoundingBox(test_collider_pos + m3d::vec3(0.2), test_collider_pos - m3d::vec3(0.2));
-        //dgn::Plane test_collider = dgn::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), test_collider_pos.y);
+        tgr::Sphere test_collider = tgr::Sphere(test_collider_pos, 0.2f);
+        //tgr::AABB test_collider = tgr::AABB(test_collider_pos + m3d::vec3(0.2), test_collider_pos - m3d::vec3(0.2));
+        //tgr::Plane test_collider = tgr::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), test_collider_pos.y);
 //        dgn::Triangle test_collider = dgn::Triangle(test_collider_pos + m3d::vec3(-0.5f, -0.5f, 0.0f),
 //                                                    test_collider_pos + m3d::vec3(0.0f, 0.5f, 0.0f),
 //                                                    test_collider_pos + m3d::vec3(0.5f, -0.5f, 0.0f));
 
-        dgn::BoundingBox box1 = dgn::BoundingBox(m3d::vec3(0.5f, 2.5f, 5.5f), m3d::vec3(-0.5f, 1.5f, 4.5f)).normalize();
-        dgn::BoundingSphere sphere1 = dgn::BoundingSphere(m3d::vec3(1.0f, 3.0f, 0.0f), 0.5f);
-        dgn::Plane plane1 = dgn::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), 1.0f);
-        dgn::Triangle tri1 = dgn::Triangle(m3d::vec3(0.0f, 1.5f, 2.5f), m3d::vec3(0.0f, 2.5f, 3.0f), m3d::vec3(0.0f, 1.5f, 3.5f));
+        tgr::AABB box1 = tgr::AABB(m3d::vec3(0.5f, 2.5f, 5.5f), m3d::vec3(-0.5f, 1.5f, 4.5f)).normalize();
+        tgr::Sphere sphere1 = tgr::Sphere(m3d::vec3(1.0f, 3.0f, 2.0f), 0.5f);
+        tgr::Plane plane1 = tgr::Plane(m3d::vec3(0.0f, 1.0f, 0.0f), 1.0f);
+        //dgn::Triangle tri1 = dgn::Triangle(m3d::vec3(0.0f, 1.5f, 2.5f), m3d::vec3(0.0f, 2.5f, 3.0f), m3d::vec3(0.0f, 1.5f, 3.5f));
 
         colliders.push_back(&box1);
         colliders.push_back(&sphere1);
         colliders.push_back(&plane1);
-        colliders.push_back(&tri1);
+        //colliders.push_back(&tri1);
         colliders.push_back(&test_collider);
 
         for(unsigned i = 0; i < colliders.size(); i++)
@@ -721,17 +720,17 @@ int main(int argc, const char* argv[])
 
             switch(colliders[i]->getType())
             {
-            case dgn::ColliderType::Box:
-                drawLineBox(*(dgn::BoundingBox*)colliders[i], line_u_points, main_window.getRenderer());
+            case tgr::ColliderType::AABB:
+                drawLineBox(*(tgr::AABB*)colliders[i], line_u_points, main_window.getRenderer());
                 break;
-            case dgn::ColliderType::Sphere:
-                    drawLineSphere(*(dgn::BoundingSphere*)colliders[i], line_u_points, main_window.getRenderer());
+            case tgr::ColliderType::Sphere:
+                    drawLineSphere(*(tgr::Sphere*)colliders[i], line_u_points, main_window.getRenderer());
                 break;
-            case dgn::ColliderType::Plane:
-                    drawPlane(*(dgn::Plane*)colliders[i], line_u_points, main_window.getRenderer());
+            case tgr::ColliderType::Plane:
+                    drawPlane(*(tgr::Plane*)colliders[i], line_u_points, main_window.getRenderer());
                 break;
-            case dgn::ColliderType::Triangle:
-                    drawTriangle(*(dgn::Triangle*)colliders[i], line_u_points, main_window.getRenderer());
+            case tgr::ColliderType::Triangle:
+                    //drawTriangle(*(dgn::Triangle*)colliders[i], line_u_points, main_window.getRenderer());
                 break;
             default:
                 break;
@@ -748,8 +747,8 @@ int main(int argc, const char* argv[])
         near_point = plane1.nearestPoint(camera.position);
         drawPoint(near_point, line_u_points, main_window.getRenderer());
 
-        near_point = tri1.nearestPoint(camera.position);
-        drawPoint(near_point, line_u_points, main_window.getRenderer());
+        //near_point = tri1.nearestPoint(camera.position);
+        //drawPoint(near_point, line_u_points, main_window.getRenderer());
 
         main_window.getRenderer().unbindShader();
         main_window.getRenderer().unbindMesh();
@@ -870,63 +869,49 @@ void updateCamera(dgn::Camera *camera, dgn::Window *window, float delta, bool co
     }
 }
 
-void drawLineBox(const dgn::BoundingBox& box, int uniforms[], const dgn::Renderer& renderer)
+void drawLineBox(const tgr::AABB& box, int uniforms[], const dgn::Renderer& renderer)
 {
-    m3d::vec3 size = box.max - box.min;
 
-    dgn::Shader::uniform(uniforms[0], box.max);
-    dgn::Shader::uniform(uniforms[1], box.max - m3d::vec3(size.x, 0.0f, 0.0f));
-    renderer.drawBoundMesh();
+    m3d::vec3 extent_multipliers[] =
+    {
+        m3d::vec3(1.0f, 0.0f, 0.0f), m3d::vec3(0.0f, 0.0f, 1.0f),
+        m3d::vec3(-1.0f, 0.0f, 0.0f), m3d::vec3(0.0f, 0.0f, -1.0f),
+        m3d::vec3(0.0f, 1.0f, 0.0f),
+        m3d::vec3(1.0f, 0.0f, 0.0f), m3d::vec3(0.0f, 0.0f, 1.0f),
+        m3d::vec3(-1.0f, 0.0f, 0.0f), m3d::vec3(0.0f, 0.0f, -1.0f),
 
-    dgn::Shader::uniform(uniforms[0], box.max);
-    dgn::Shader::uniform(uniforms[1], box.max - m3d::vec3(0.0f, size.y, 0.0f));
-    renderer.drawBoundMesh();
+        m3d::vec3(0.0f, 0.0f, 0.0f),
+        m3d::vec3(-1.0f, 0.0f, 0.0f), m3d::vec3(0.0f, 0.0f, -1.0f),
+    };
 
-    dgn::Shader::uniform(uniforms[0], box.max);
-    dgn::Shader::uniform(uniforms[1], box.max - m3d::vec3(0.0f, 0.0f, size.z));
-    renderer.drawBoundMesh();
+    m3d::vec3 e = box.getExtents() * 2.0;
+    m3d::vec3 point = box.getMin();
 
-    dgn::Shader::uniform(uniforms[0], box.min);
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, 0.0f, 0.0f));
-    renderer.drawBoundMesh();
+    for(int i = 0; i < 9; i++)
+    {
+        m3d::vec3 end_point = point + m3d::vec3::scale(e, extent_multipliers[i]);
+        dgn::Shader::uniform(uniforms[0], point);
+        dgn::Shader::uniform(uniforms[1], end_point);
+        renderer.drawBoundMesh();
 
-    dgn::Shader::uniform(uniforms[0], box.min);
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, size.y, 0.0f));
-    renderer.drawBoundMesh();
+        point = end_point;
+    }
 
-    dgn::Shader::uniform(uniforms[0], box.min);
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, 0.0f, size.z));
-    renderer.drawBoundMesh();
+    for(int i = 0; i < 3; i++)
+    {
+        m3d::vec3 offset = extent_multipliers[i + 9];
 
-    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(size.x, 0.0f, 0.0f));
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, size.y, 0.0f));
-    renderer.drawBoundMesh();
-
-    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(size.x, 0.0f, 0.0f));
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, 0.0f, size.z));
-    renderer.drawBoundMesh();
-
-    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, size.y, 0.0f));
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, size.y, size.z));
-    renderer.drawBoundMesh();
-
-    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, size.y, 0.0f));
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, size.y, 0.0f));
-    renderer.drawBoundMesh();
-
-    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, 0.0f, size.z));
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(size.x, 0.0f, size.z));
-    renderer.drawBoundMesh();
-
-    dgn::Shader::uniform(uniforms[0], box.min + m3d::vec3(0.0f, 0.0f, size.z));
-    dgn::Shader::uniform(uniforms[1], box.min + m3d::vec3(0.0f, size.y, size.z));
-    renderer.drawBoundMesh();
+        dgn::Shader::uniform(uniforms[0], box.getMax() + offset);
+        offset.y = -e.y;
+        dgn::Shader::uniform(uniforms[1], box.getMax() + offset);
+        renderer.drawBoundMesh();
+    }
 }
 
 const float sphere_subdivisions = 16;
 const float sphere_angle = 2.0f * PI / sphere_subdivisions;
 
-void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn::Renderer& renderer)
+void drawLineSphere(const tgr::Sphere& sphere, int uniforms[], const dgn::Renderer& renderer)
 {
     m3d::vec3 start_long = m3d::vec3(1.0f, 0.0f, 0.0f);
     m3d::vec3 end_long;
@@ -946,19 +931,19 @@ void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn
 
         end_long = m3d::vec3(cos_theta, 0.0f, sin_theta);
 
-        dgn::Shader::uniform(uniforms[0], start_long * sphere.radius + sphere.position);
-        dgn::Shader::uniform(uniforms[1], end_long * sphere.radius + sphere.position);
+        dgn::Shader::uniform(uniforms[0], start_long * sphere.getRadius() + sphere.getCenter());
+        dgn::Shader::uniform(uniforms[1], end_long * sphere.getRadius() + sphere.getCenter());
         renderer.drawBoundMesh();
 
         end_lat_x = m3d::vec3(cos_theta, sin_theta, 0.0f);
 
-        dgn::Shader::uniform(uniforms[0], start_lat_x * sphere.radius + sphere.position);
-        dgn::Shader::uniform(uniforms[1], end_lat_x * sphere.radius + sphere.position);
+        dgn::Shader::uniform(uniforms[0], start_lat_x * sphere.getRadius() + sphere.getCenter());
+        dgn::Shader::uniform(uniforms[1], end_lat_x * sphere.getRadius() + sphere.getCenter());
         renderer.drawBoundMesh();
 
         end_lat_z = m3d::vec3(0.0f, sin_theta, cos_theta);
-        dgn::Shader::uniform(uniforms[0], start_lat_z * sphere.radius + sphere.position);
-        dgn::Shader::uniform(uniforms[1], end_lat_z * sphere.radius + sphere.position);
+        dgn::Shader::uniform(uniforms[0], start_lat_z * sphere.getRadius() + sphere.getCenter());
+        dgn::Shader::uniform(uniforms[1], end_lat_z * sphere.getRadius() + sphere.getCenter());
         renderer.drawBoundMesh();
 
         start_long = end_long;
@@ -970,26 +955,26 @@ void drawLineSphere(const dgn::BoundingSphere& sphere, int uniforms[], const dgn
 const float planeHWidth = 1.5;
 const float planeHeight = 1.0;
 
-void drawPlane(const dgn::Plane& plane, int uniforms[], const dgn::Renderer& renderer)
+void drawPlane(const tgr::Plane& plane, int uniforms[], const dgn::Renderer& renderer)
 {
-    m3d::vec3 center = plane.normal * plane.distance;
+    m3d::vec3 center = plane.getNormal() * plane.getDistance();
 
     m3d::vec3 tan;
     m3d::vec3 bitan;
 
-    if(std::abs(m3d::vec3::dot(plane.normal, m3d::vec3(0.0f, 1.0f, 0.0f)) == 1))
+    if(std::abs(m3d::vec3::dot(plane.getNormal(), m3d::vec3(0.0f, 1.0f, 0.0f)) == 1))
     {
         tan = m3d::vec3(1.0f, 0.0f, 0.0f);
         bitan = m3d::vec3(0.0f, 0.0f, 1.0f);
     }
     else
     {
-        tan = m3d::vec3::cross(plane.normal, m3d::vec3(0.0f, 1.0f, 0.0f)).normalized();
-        bitan = m3d::vec3::cross(plane.normal, tan).normalized();
+        tan = m3d::vec3::cross(plane.getNormal(), m3d::vec3(0.0f, 1.0f, 0.0f)).normalized();
+        bitan = m3d::vec3::cross(plane.getNormal(), tan).normalized();
     }
 
     dgn::Shader::uniform(uniforms[0], center);
-    dgn::Shader::uniform(uniforms[1], center + plane.normal * planeHeight);
+    dgn::Shader::uniform(uniforms[1], center + plane.getNormal() * planeHeight);
     renderer.drawBoundMesh();
 
     dgn::Shader::uniform(uniforms[0], center + (tan + bitan) * planeHWidth);
@@ -1032,7 +1017,7 @@ void drawPoint(const m3d::vec3& point, int uniforms[], const dgn::Renderer& rend
     }
 }
 
-void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer& renderer)
+/*void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer& renderer)
 {
     dgn::Shader::uniform(uniforms[0], tri.p1);
     dgn::Shader::uniform(uniforms[1], tri.p2);
@@ -1045,7 +1030,7 @@ void drawTriangle(const dgn::Triangle& tri, int uniforms[], const dgn::Renderer&
     dgn::Shader::uniform(uniforms[0], tri.p3);
     dgn::Shader::uniform(uniforms[1], tri.p1);
     renderer.drawBoundMesh();
-}
+}*/
 
 //TODO: move physics to new "Tiger Engine"
 

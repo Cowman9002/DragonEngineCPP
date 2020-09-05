@@ -25,7 +25,6 @@ void main()
 	// gamma correction
 	color = pow(color, vec3(1.0 / 2.2));
 	
-	
 	color = texture3D(uColorLut, color).rgb;
 	
 	fragColor = vec4(color, 1.0);
