@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include <Input.h>
-#include <Renderer.h>
+#include "Input.h"
+#include "Renderer.h"
 
 struct GLFWwindow;
 

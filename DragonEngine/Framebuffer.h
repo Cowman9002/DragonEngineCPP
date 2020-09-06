@@ -1,10 +1,9 @@
 #pragma once
 
-#include "textureEnums.h"
+#include "DragonEngine/Texture.h"
 
 namespace dgn
 {
-    class Texture;
     class Framebuffer
     {
         friend class Renderer;

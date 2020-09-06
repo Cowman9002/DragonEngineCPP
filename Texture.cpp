@@ -1,4 +1,4 @@
-#include "Texture.h"
+#include "DragonEngine/Texture.h"
 #include "d_internal.h"
 
 #include "lodepng.h"
@@ -350,7 +350,6 @@ namespace dgn
         if(Texture::max_anisotrophic < 0)
         {
             glCall(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &Texture::max_anisotrophic));
-            logMessagef("Anisotropic: %f\n", Texture::max_anisotrophic);
         }
 
         float v = Texture::max_anisotrophic;

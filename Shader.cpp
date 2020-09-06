@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "DragonEngine/Shader.h"
 #include "d_internal.h"
 
 #include <glad/glad.h>
@@ -109,7 +109,6 @@ namespace dgn
         glCall(glShaderSource(shader, 1, &d, NULL));
         glCall(glCompileShader(shader));
 
-        #ifdef __DEBUG__
         int success;
         char buff[512];
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -138,18 +137,15 @@ namespace dgn
                     {
                         if(unsigned(line) < total_line_num)
                         {
-                            logMessagef("%i: %s\n", line, lines[line - 1].c_str());
+                            logError(std::to_string(line).c_str(), lines[line - 1].c_str());
                         }
                     }
                 }
-
-                logMessage("\n");
 
                 debug_v = buff_s.find("ERROR: ", debug_v);
             }
 
         }
-        #endif // __DEBUG
 
         return shader;
     }

@@ -1,16 +1,22 @@
-#include "ShadowMap.h"
+#include "DragonEngine/ShadowMap.h"
 
 #include <m3d/quat.h>
 #include <m3d/vec4.h>
 #include <m3d/vec2.h>
-#include "Camera.h"
+#include "DragonEngine/Camera.h"
 
-#include "math.h"
+#include <vector>
 
-#include "TigerEngine/Sphere.h"
+#include <cmath>
 
 namespace dgn
 {
+    struct Sphere
+    {
+        float radius;
+        m3d::vec3 center;
+    };
+
     ShadowMap::ShadowMap() : m_texture(), m_buffer(), m_projection(1.0f), light_view(1.0f) {}
 
     ShadowMap& ShadowMap::initialize(unsigned width, unsigned height)
@@ -92,25 +98,42 @@ namespace dgn
 
         /** -- Rotation shimmering -- **/
 
-        tgr::Sphere sphere;
-        sphere.genFromPoints(frustum_corners_L);
-        sphere.setRadius(sphere.getRadius() * scale_value);
+        Sphere sphere;
+
+        m3d::vec3 sum;
+        float d = 0.0f;
+
+        for(unsigned i = 0; i < 8; i++)
+        {
+            sum += frustum_corners_L[i];
+
+            // loop over all previous points to find the max distance between any two points
+            for(unsigned j = 0; j < i; j++)
+            {
+                float dist = m3d::vec3::distance(frustum_corners_L[i], frustum_corners_L[j]);
+                d = std::max(dist, d);
+            }
+        }
+
+        sphere.radius = d / 2.0f;
+        sphere.center = sum / 8.0f;
+
+        sphere.radius *= scale_value;
 
         /** -- Position shimmering -- **/
-        float rx2 = sphere.getRadius() * 2.0f;
+        float rx2 = sphere.radius * 2.0f;
         m3d::vec3 texel_world_size = m3d::vec3(rx2 / m_texture.getWidth(),
                                 rx2 / m_texture.getHeight(), 1.0f);
 
-        sphere.setCenter(m3d::vec3::invScale(sphere.getCenter(), texel_world_size));
+        sphere.center = m3d::vec3::invScale(sphere.center, texel_world_size);
 
-        sphere.setCenter(m3d::vec3(floor(sphere.getCenter().x),
-                                   floor(sphere.getCenter().y),
-                                   sphere.getCenter().z));
+        sphere.center.x = std::floor(sphere.center.x);
+        sphere.center.y = std::floor(sphere.center.y);
 
-        sphere.setCenter(m3d::vec3::scale(sphere.getCenter(), texel_world_size));
+        sphere.center = m3d::vec3::scale(sphere.center, texel_world_size);
 
-        m3d::vec3 max = sphere.getCenter() + m3d::vec3(sphere.getRadius());
-        m3d::vec3 min = sphere.getCenter() - m3d::vec3(sphere.getRadius());
+        m3d::vec3 max = sphere.center + m3d::vec3(sphere.radius);
+        m3d::vec3 min = sphere.center - m3d::vec3(sphere.radius);
 
         m_projection = m3d::mat4x4::initOrtho(max.x, min.x, max.y, min.y, min.z - near_pull, max.z);
         return *this;

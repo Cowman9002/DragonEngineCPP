@@ -5,6 +5,8 @@
 
 namespace dgn
 {
+    typedef std::vector<Mesh> Model;
+
     class Mesh
     {
         friend class Renderer;
@@ -32,4 +34,6 @@ namespace dgn
 
         bool m_disposed;
     };
+
+    typedef std::vector<Mesh> Model;
 }

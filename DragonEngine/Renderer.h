@@ -3,7 +3,6 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
-#include "Cubemap.h"
 #include "Framebuffer.h"
 
 namespace dgn

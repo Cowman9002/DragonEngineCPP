@@ -1,8 +1,5 @@
-#include "Framebuffer.h"
+#include "DragonEngine/Framebuffer.h"
 #include "d_internal.h"
-
-#include "Texture.h"
-#include "Cubemap.h"
 
 #include <glad/glad.h>
 #include <vector>
