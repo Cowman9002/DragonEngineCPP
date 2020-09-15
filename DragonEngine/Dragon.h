@@ -9,8 +9,4 @@
 #include "ShadowMap.h"
 #include "Texture.h"
 #include "Window.h"
-
-namespace dgn
-{
-    const char *getErrorString();
-}
+#include "ErrorString.h"

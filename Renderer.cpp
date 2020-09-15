@@ -37,19 +37,19 @@ namespace dgn
         bound_mesh_size = mesh.m_length;
     }
 
-    void Renderer::bindShader(const Shader& shader)
+    void Renderer::bindShader(const Shader& shader) const
     {
         glCall(glUseProgram(shader.m_program));
     }
 
-    void Renderer::bindTexture(const Texture& texture, unsigned slot)
+    void Renderer::bindTexture(const Texture& texture, unsigned slot) const
     {
         glCall(glActiveTexture(GL_TEXTURE0 + slot));
 
         glCall(glBindTexture((unsigned)texture.getTextureType(), texture.m_texture));
     }
 
-    void Renderer::bindFramebuffer(const Framebuffer& framebuffer)
+    void Renderer::bindFramebuffer(const Framebuffer& framebuffer) const
     {
         glCall(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.m_buffer));
     }
@@ -61,19 +61,19 @@ namespace dgn
         bound_mesh_size = 0;
     }
 
-    void Renderer::unbindShader()
+    void Renderer::unbindShader() const
     {
         glCall(glUseProgram(0));
     }
 
-    void Renderer::unbindTexture(unsigned slot)
+    void Renderer::unbindTexture(unsigned slot) const
     {
         glCall(glActiveTexture(GL_TEXTURE0 + slot));
 
         glCall(glBindTexture(GL_TEXTURE_2D, 0));
     }
 
-    void Renderer::unbindFramebuffer()
+    void Renderer::unbindFramebuffer() const
     {
         glCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }

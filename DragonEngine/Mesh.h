@@ -5,7 +5,6 @@
 
 namespace dgn
 {
-    typedef std::vector<Mesh> Model;
 
     class Mesh
     {

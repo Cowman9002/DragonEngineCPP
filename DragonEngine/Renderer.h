@@ -100,14 +100,14 @@ namespace dgn
         void clear();
 
         void bindMesh(const Mesh& mesh);
-        void bindShader(const Shader& shader);
-        void bindTexture(const Texture& texture, unsigned slot);
-        void bindFramebuffer(const Framebuffer& framebuffer);
+        void bindShader(const Shader& shader) const;
+        void bindTexture(const Texture& texture, unsigned slot) const;
+        void bindFramebuffer(const Framebuffer& framebuffer) const;
 
         void unbindMesh();
-        void unbindShader();
-        void unbindTexture(unsigned slot);
-        void unbindFramebuffer();
+        void unbindShader() const;
+        void unbindTexture(unsigned slot) const;
+        void unbindFramebuffer() const;
 
         void drawBoundMesh() const;
 

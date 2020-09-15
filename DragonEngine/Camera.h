@@ -19,8 +19,8 @@ namespace dgn
         Camera();
         Camera(m3d::vec3 position, m3d::quat rotation, float width, float height, float fov, float near, float far);
 
-        m3d::mat4x4 getProjection();
-        m3d::mat4x4 getView();
-        m3d::mat4x4 getInverseView();
+        m3d::mat4x4 getProjection() const;
+        m3d::mat4x4 getView() const;
+        m3d::mat4x4 getInverseView() const;
     };
 }
