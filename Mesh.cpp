@@ -7,6 +7,8 @@
 
 #include <glad/glad.h>
 
+#include <m3d/vec3.h>
+
 namespace dgn
 {
     Mesh::Mesh() : m_vao(0), m_vbo(0), m_ibo(0), m_length(0), vert_size(0), vert_offsets(0)
@@ -108,7 +110,7 @@ namespace dgn
 
         Assimp::Importer importer;
 
-        const aiScene* scene = importer.ReadFile(filepath.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        const aiScene* scene = importer.ReadFile(filepath.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);
         // If the import failed, report it
         if(!scene)
         {
@@ -211,5 +213,52 @@ namespace dgn
         m.complete();
 
         return m;
+    }
+
+    std::vector<m3d::vec3> Mesh::loadVertices(std::string filepath)
+    {
+        std::vector<m3d::vec3> res;
+
+        Assimp::Importer importer;
+
+        const aiScene* scene = importer.ReadFile(filepath.c_str(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+        // If the import failed, report it
+        if(!scene)
+        {
+            logError("TRIANGLE LOADING", importer.GetErrorString());
+            return res;
+        }
+
+        std::vector<m3d::vec3> positions;
+
+        // Now we can access the file's contents
+        for(unsigned i = 0; i < scene->mNumMeshes; i++)
+        {
+            aiMesh *mesh = scene->mMeshes[i];
+            for(uint32_t v = 0; v < mesh->mNumVertices; v++)
+            {
+                m3d::vec3 temp;
+                temp.x = mesh->mVertices[v].x;
+                temp.y = mesh->mVertices[v].y;
+                temp.z = mesh->mVertices[v].z;
+
+                positions.push_back(temp);
+            }
+
+            for(uint32_t f = 0; f < mesh->mNumFaces; f++)
+            {
+                struct aiFace face = mesh->mFaces[f];
+                for(unsigned i = 0; i < face.mNumIndices; i++)
+                {
+                    res.push_back(positions[face.mIndices[i]]);
+                }
+            }
+
+            positions.clear();
+        }
+
+        // We're done. Release all resources associated with this import
+        importer.FreeScene();
+        return res;
     }
 }

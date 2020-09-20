@@ -3,9 +3,13 @@
 #include <vector>
 #include <string>
 
+namespace m3d
+{
+    class vec3;
+}
+
 namespace dgn
 {
-
     class Mesh
     {
         friend class Renderer;
@@ -21,6 +25,11 @@ namespace dgn
         Mesh& complete();
 
         static std::vector<Mesh> loadFromFile(std::string filepath);
+
+        /**
+            Returns a vector of all positions of vertices loaded from given filepath
+        */
+        static std::vector<m3d::vec3> loadVertices(std::string filepath);
 
     private:
         unsigned m_vao;
